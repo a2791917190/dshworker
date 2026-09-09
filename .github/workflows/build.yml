@@ -39,9 +39,18 @@ jobs:
 
       # mac 版会在 afterPack 里自动 vendor mac node + mac harness(联网),
       # 产出「离线自包含」的 mac zip + dmg;Windows 产出 NSIS 安装包。
+      # 统一用高内存避免 vendor 时 npm install OOM;并禁用 electron-builder 自动发布
+      # (发布由下面的 release 步骤完成,否则会因缺 GH_TOKEN 报错)。
       - name: Build
         working-directory: desktop
-        run: ${{ matrix.build_script }}
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+          # 国内网络可取消注释换镜像(可选):
+          # ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          # ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+          # DSHWORK_NODE_DIST_MIRROR: https://npmmirror.com/mirrors/node
+          # DSHWORK_NPM_REGISTRY: https://registry.npmmirror.com
+        run: ${{ matrix.build_script }} -- --publish never
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
