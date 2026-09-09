@@ -1,0 +1,113 @@
+:root {
+  --bg: #04070f;
+  --bg-2: #0a1430;
+  --panel: #10233c;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #eaf6ff;
+  --muted: #8ba3bd;
+  --cyan: #35e0ff;
+  --teal: #3de8c9;
+  --mint: #7bf5c0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Noto Sans SC", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.wb { display: flex; min-height: 100vh; }
+
+.wb__side {
+  width: 220px;
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+}
+
+.wb__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  padding: 8px 8px 20px;
+}
+
+.wb__logo {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(115deg, var(--cyan), var(--teal), var(--mint));
+  color: #04121c;
+  font-weight: 800;
+}
+
+.wb__nav { display: flex; flex-direction: column; gap: 4px; }
+.wb__nav button {
+  text-align: left;
+  padding: 10px 12px;
+  border: 0; border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+.wb__nav button.is-active {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.wb__side-foot {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wb__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); }
+
+.wb__main { flex: 1; padding: 32px; overflow: auto; }
+
+.wb__head h1 { margin: 0 0 8px; font-size: 26px; }
+.wb__head p { margin: 0 0 24px; color: var(--muted); }
+
+.wb__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.wb__card {
+  text-align: left;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.wb__card:hover { transform: translateY(-2px); border-color: var(--teal); }
+.wb__card strong { display: block; margin-bottom: 6px; font-size: 16px; }
+.wb__card span { color: var(--muted); font-size: 13px; }
+
+.wb__status { margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+.wb__list { list-style: none; padding: 0; margin: 0; }
+.wb__list li {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: var(--panel);
+}
+.wb__empty { color: var(--muted); }
+
+.is-hidden { display: none; }

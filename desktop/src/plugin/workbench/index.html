@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSHwork · 工作台</title>
+  <link rel="stylesheet" href="./workbench.css" />
+</head>
+<body>
+  <div class="wb">
+    <aside class="wb__side">
+      <div class="wb__brand">
+        <span class="wb__logo" aria-hidden="true">DS</span>
+        <span>DSHwork</span>
+      </div>
+      <nav class="wb__nav" id="nav">
+        <button class="is-active" data-view="home">主页</button>
+        <button data-view="tasks">任务</button>
+        <button data-view="workspace">工作区</button>
+        <button data-view="templates">模板库</button>
+        <button data-view="plugins">我的插件</button>
+      </nav>
+      <div class="wb__side-foot">
+        <span class="wb__dot"></span> 本地工作台 · 社区项目
+      </div>
+    </aside>
+
+    <main class="wb__main">
+      <!-- 主页 -->
+      <section class="wb__view" data-panel="home">
+        <header class="wb__head">
+          <h1>今天,做点什么?</h1>
+          <p>选一个模板开始,零命令、开箱即用。</p>
+        </header>
+        <div class="wb__cards">
+          <button class="wb__card" data-task="research-report">
+            <strong>研究报告</strong>
+            <span>把多来源资料整合成一份可编辑报告</span>
+          </button>
+          <button class="wb__card" data-task="literature">
+            <strong>文献整理</strong>
+            <span>梳理要点、生成提纲与引用</span>
+          </button>
+          <button class="wb__card" data-task="draft">
+            <strong>长文起草</strong>
+            <span>从提纲到成稿,一步步完成</span>
+          </button>
+          <button class="wb__card" data-task="polish">
+            <strong>改写润色</strong>
+            <span>让文字更清晰、更专业</span>
+          </button>
+        </div>
+        <div class="wb__status" id="status">就绪</div>
+      </section>
+
+      <!-- 任务 -->
+      <section class="wb__view is-hidden" data-panel="tasks">
+        <header class="wb__head">
+          <h1>任务</h1>
+          <p>进行中的 Agent 任务与结果。</p>
+        </header>
+        <ul class="wb__list" id="task-list">
+          <li class="wb__empty">暂无任务,回「主页」选个模板开始吧。</li>
+        </ul>
+      </section>
+
+      <!-- 工作区 -->
+      <section class="wb__view is-hidden" data-panel="workspace">
+        <header class="wb__head">
+          <h1>工作区</h1>
+          <p>项目、资料与产物集中在这里。</p>
+        </header>
+        <ul class="wb__list">
+          <li class="wb__empty">工作区骨架已就位,待接入 Harness 项目能力。</li>
+        </ul>
+      </section>
+
+      <!-- 模板库 -->
+      <section class="wb__view is-hidden" data-panel="templates">
+        <header class="wb__head">
+          <h1>模板库</h1>
+          <p>预置生产力模板,任务 = 模板。</p>
+        </header>
+        <ul class="wb__list">
+          <li>研究报告</li>
+          <li>资料调研</li>
+          <li>文献整理</li>
+          <li>长文起草</li>
+          <li>改写润色</li>
+        </ul>
+      </section>
+
+      <!-- 我的插件 -->
+      <section class="wb__view is-hidden" data-panel="plugins">
+        <header class="wb__head">
+          <h1>我的插件</h1>
+          <p>来自 DeepSeek.club 插件库,一键装进工作台。</p>
+        </header>
+        <ul class="wb__list" id="plugin-list">
+          <li class="wb__empty">暂无插件,可通过插件库深链安装。</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="./workbench.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# dshwork workbench bundle patch: inserts its public dsh.client entry into the web plugin roster.
+- insert:
+    - id: dshwork-workbench
+      name: '@deepseek-ai/dsh-client-ui-dshwork'

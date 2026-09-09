@@ -1,0 +1,34 @@
+# ---- 依赖(永不入库) ----
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# ---- 构建产物(构建时重新生成,且文件过大) ----
+desktop/dist/
+**/dist/
+out/
+*.zip
+*.exe
+*.dmg
+*.blockmap
+latest.yml
+builder-debug.yml
+
+# ---- 内置运行时(构建期由 vendor 生成,巨大,不入库) ----
+desktop/vendor/dsh/node_modules/
+resources/node/
+resources/vendor/harness/
+desktop/runtime/
+
+# ---- 运行时私有数据 ----
+**/dsh-home/
+.dsh/
+
+# ---- 环境/编辑器 ----
+.env
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/

@@ -1,0 +1,64 @@
+name: Build DSHwork
+
+# 触发:推送 v* tag(如 v0.1.0),或手动 workflow_dispatch
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # 只构建在范围内的平台:macOS + Windows
+        include:
+          - os: macos-latest
+            build_script: npm run build:mac
+            artifact: dshwork-mac
+          - os: windows-latest
+            build_script: npm run build:win
+            artifact: dshwork-win
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install deps (desktop)
+        working-directory: desktop
+        run: npm ci
+
+      # mac 版会在 afterPack 里自动 vendor mac node + mac harness(联网),
+      # 产出「离线自包含」的 mac zip + dmg;Windows 产出 NSIS 安装包。
+      - name: Build
+        working-directory: desktop
+        run: ${{ matrix.build_script }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-${{ github.ref_name }}
+          path: |
+            desktop/dist/*.zip
+            desktop/dist/*.dmg
+            desktop/dist/*.exe
+            desktop/dist/*.blockmap
+          if-no-files-found: warn
+
+      # 可选:tag 推送时自动发布 GitHub Release(免签的 mac 包首次需右键打开)。
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'macos-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/dist/*.zip
+            desktop/dist/*.dmg

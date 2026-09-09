@@ -1,0 +1,6 @@
+{
+  "bundledVersion": "0.1.1-rc.2",
+  "npmPackage": "@deepseek-ai/dsh",
+  "bundledDir": "vendor/dsh",
+  "nodeVersion": "24.19.0"
+}

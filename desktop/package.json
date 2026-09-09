@@ -1,0 +1,77 @@
+{
+  "name": "dshwork",
+  "version": "0.1.0",
+  "description": "DSHwork — 给知识工作者的 DeepSeek Agent 工作台(薄壳 + 插件化,非 DeepSeek 官方产品)",
+  "main": "src/main/main.js",
+  "author": "DeepSeek.club <hello@deepseek.club>",
+  "license": "MIT",
+  "homepage": "https://dshwork.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DeepSeek-club/dshwork"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis --x64",
+    "build:mac": "electron-builder --mac",
+    "build:mac:cross": "electron-builder --mac zip",
+    "build:all": "electron-builder -mw",
+    "test": "node test/harness.test.js && node test/node-runtime.test.cjs && node test/profile-mount.test.cjs && node test/harness-home.test.cjs",
+    "vendor:runtime": "node ..\\plugins\\vendor-runtime.cjs"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "ai.dshwork.desktop",
+    "productName": "DSHwork",
+    "directories": {
+      "output": "dist"
+    },
+    "afterPack": "./scripts/after-pack-mac.cjs",
+    "files": [
+      "src/**/*",
+      "config/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "vendor",
+        "to": "vendor",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../plugins/dsh-client-ui-dshwork",
+        "to": "plugins/dsh-client-ui-dshwork",
+        "filter": ["**/*"]
+      }
+    ],
+    "protocols": [
+      {
+        "name": "DSHwork deep link",
+        "schemes": ["dshwork"]
+      }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "DSHwork"
+    },
+    "mac": {
+      "target": ["zip", "dmg"],
+      "category": "public.app-category.productivity",
+      "icon": "assets/icons/icon.icns",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "DSHwork ${version}"
+    }
+  }
+}

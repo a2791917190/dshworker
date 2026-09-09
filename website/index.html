@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSHwork · 解放你的生产力 —— 零命令、开箱即用的 AI 工作台</title>
+  <meta name="description" content="DSHwork.ai —— 给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用:打开它,你是用 AI 把活干完,而不是折腾开发者工具。由深求社区 DeepSeek.club 出品的独立社区项目,非 DeepSeek 官方产品。" />
+  <meta name="keywords" content="DSHwork,DeepSeek Harness,Agent 工作台,AI 工作台,AI 生产力工具,生产力,研究报告,资料调研,文献整理,长文起草" />
+  <meta property="og:title" content="DSHwork · 解放你的生产力 —— 零命令、开箱即用的 AI 工作台" />
+  <meta property="og:description" content="给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用,用 AI 把活干完。由 DeepSeek.club 社区出品。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://dshwork.ai/" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DSHwork",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS",
+    "description": "DSHwork.ai —— 给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用,用 AI 把活干完。由 DeepSeek.club 出品的独立社区项目。",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+    "url": "https://dshwork.ai/",
+    "downloadUrl": "https://dshwork.ai/#download"
+  }
+  </script>
+</head>
+<body>
+  <!-- aurora background -->
+  <div class="aurora" aria-hidden="true">
+    <div class="aurora__ribbon"></div>
+    <div class="aurora__ribbon aurora__ribbon--2"></div>
+    <div class="aurora__blob aurora__blob--a"></div>
+    <div class="aurora__blob aurora__blob--b"></div>
+    <div class="aurora__blob aurora__blob--c"></div>
+    <div class="aurora__grid"></div>
+    <div class="aurora__noise"></div>
+    <div class="aurora__fog"></div>
+  </div>
+  <canvas id="particles" aria-hidden="true"></canvas>
+
+  <!-- ===== NAV ===== -->
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="#top" aria-label="DSHwork home">
+        <span class="brand__mark"><img src="assets/img/favicon.png" alt="" /></span>
+        <span class="brand__text">
+          <span class="brand__name">DSHwork</span>
+          <small class="brand__tag" data-i18n="nav.tag">DeepSeek Agent 工作台</small>
+        </span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#features" data-i18n="nav.features">特性</a>
+        <a href="#download" data-i18n="nav.download">下载</a>
+        <a href="#community" data-i18n="nav.community">社区 DeepSeek.club</a>
+      </nav>
+      <div class="nav__cta">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" class="lang-btn is-active" data-lang="zh">中文</button>
+          <span class="lang-sep" aria-hidden="true">/</span>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <a class="btn btn--primary btn--sm" href="#download" data-i18n="nav.cta">下载</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <span class="hero__eyebrow"><i></i><span data-i18n="hero.eyebrow">DSHWORK.AI · AI 生产力工作台</span></span>
+          <h1 class="hero__title" data-i18n-html="hero.title">DSHwork,<em>解放你的生产力</em>。</h1>
+          <p class="hero__sub" data-i18n="hero.sub">零命令、开箱即用的 AI 工作台。打开它,你是用 AI 把活干完——而不是折腾开发者工具。</p>
+
+          <ul class="hero__pills">
+            <li><span class="pill-dot"></span><span data-i18n="p1">零命令</span></li>
+            <li><span class="pill-dot"></span><span data-i18n="p2">预置模板</span></li>
+            <li><span class="pill-dot"></span><span data-i18n="p3">一个窗口搞定一天</span></li>
+            <li><span class="pill-dot"></span><span data-i18n="p4">产物直接可用</span></li>
+          </ul>
+
+          <div class="hero__ctas">
+            <a class="btn btn--primary btn--lg" href="#download">
+              <span data-i18n="hero.cta">下载 DSHwork</span>
+              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+            </a>
+            <a class="btn btn--ghost btn--lg" href="https://github.com/DeepSeek-club/dshwork" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+              <span data-i18n="hero.ghost">查看 GitHub</span>
+            </a>
+          </div>
+
+          <div class="hero__badge">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span data-i18n="hero.badge">Windows / macOS · 双击即用 · 无需配置</span>
+          </div>
+        </div>
+
+        <!-- hero visual: workbench mock -->
+        <div class="hero__visual">
+          <div class="wb-mock">
+            <div class="wb-mock__bar">
+              <span class="wb-dot" style="background:#ff5f57"></span>
+              <span class="wb-dot" style="background:#febc2e"></span>
+              <span class="wb-dot" style="background:#28c840"></span>
+              <span class="wb-mock__url">DSHwork · 工作台</span>
+            </div>
+            <div class="wb-mock__body">
+              <div class="wm-side">
+                <span class="wm-brand"><i></i>DSHwork</span>
+                <span class="wm-nav is-active">主页</span>
+                <span class="wm-nav">任务</span>
+                <span class="wm-nav">工作区</span>
+                <span class="wm-nav">模板库</span>
+                <span class="wm-nav">我的插件</span>
+              </div>
+              <div class="wm-main">
+                <div class="wm-title">今天,做点什么?</div>
+                <div class="wm-cards">
+                  <div class="wm-card"><b>研究报告</b><span>多来源资料 → 可编辑报告</span></div>
+                  <div class="wm-card"><b>文献整理</b><span>要点 + 提纲 + 引用</span></div>
+                  <div class="wm-card"><b>长文起草</b><span>从提纲到成稿</span></div>
+                  <div class="wm-card"><b>改写润色</b><span>更清晰、更专业</span></div>
+                </div>
+                <div class="wm-status"><i></i>就绪</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WHY ===== -->
+    <section class="section why">
+      <div class="container">
+        <div class="section__head">
+          <span class="section__kicker" data-i18n="why.kicker">WHY DSHWORK</span>
+          <h2 class="section__title" data-i18n-html="why.title">AI 很强大,<br>它 <em>不该是道门槛</em>。</h2>
+          <p class="section__sub" data-i18n="why.sub">对普通知识工作者来说,命令、环境、Agent、插件……每个词都是一道门槛。DSHwork 把这些都藏起来,只给你一张办公桌。</p>
+        </div>
+        <div class="why__grid">
+          <div class="why__item">
+            <span class="why__num">01</span>
+            <h3 class="why__title" data-i18n="w1.title">门槛劝退</h3>
+            <p class="why__desc" data-i18n="w1.desc">强 AI 很强大,但命令与配置把太多人挡在门外。</p>
+          </div>
+          <div class="why__item">
+            <span class="why__num">02</span>
+            <h3 class="why__title" data-i18n="w2.title">双击即用</h3>
+            <p class="why__desc" data-i18n="w2.desc">像普通软件一样,双击图标,工作台就绪。</p>
+          </div>
+          <div class="why__item">
+            <span class="why__num">03</span>
+            <h3 class="why__title" data-i18n="w3.title">把事做成</h3>
+            <p class="why__desc" data-i18n="w3.desc">你不折腾工具,只把报告、调研、文档做成型。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section class="section features" id="features">
+      <div class="container">
+        <div class="section__head">
+          <span class="section__kicker" data-i18n="features.kicker">FEATURES</span>
+          <h2 class="section__title" data-i18n="features.title">把复杂留给我们,把简单还给你</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg></div>
+            <h3 data-i18n="f1.title">零命令</h3>
+            <p data-i18n="f1.desc">不用记命令、不用配环境,双击即用,自动检测并启动。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+            <h3 data-i18n="f2.title">预置模板</h3>
+            <p data-i18n="f2.desc">任务 = 模板:研究报告、资料调研、文献整理、长文起草……选一个就开工。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 6h18v12H3z"/><path d="M9 19h6"/></svg></div>
+            <h3 data-i18n="f3.title">一个窗口搞定一天</h3>
+            <p data-i18n="f3.desc">项目、资料、任务、产物集中一处,不用在多个工具间切换。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+            <h3 data-i18n="f4.title">产物直接可用</h3>
+            <p data-i18n="f4.desc">生成可编辑的 Office 文档,打开就能用、就能改。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ECOSYSTEM ===== -->
+    <section class="section ecosystem" id="ecosystem">
+      <div class="container">
+        <div class="section__head">
+          <span class="section__kicker" data-i18n="eco.kicker">ECOSYSTEM</span>
+          <h2 class="section__title" data-i18n-html="eco.title">不只是工具,<br>是 <em>DeepSeek.club 生态</em>的落地窗口</h2>
+        </div>
+        <div class="eco__grid">
+          <article class="eco-card">
+            <h3 data-i18n="e1.title">装个插件就变强</h3>
+            <p data-i18n="e1.desc">DeepSeek.club 插件库 → 一键装进 DSHwork,能力随手扩展。</p>
+          </article>
+          <article class="eco-card">
+            <h3 data-i18n="e2.title">学了就会用</h3>
+            <p data-i18n="e2.desc">Harness 学院课程 → 学完直接在 DSHwork 里上手实践。</p>
+          </article>
+          <article class="eco-card">
+            <h3 data-i18n="e3.title">今天就能干活</h3>
+            <p data-i18n="e3.desc">预置模板直接产出报告、调研、文档,打开就用。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DOWNLOAD ===== -->
+    <section class="section download" id="download">
+      <div class="container">
+        <div class="section__head center">
+          <span class="section__kicker" data-i18n="dl.kicker">DOWNLOAD</span>
+          <h2 class="section__title" data-i18n="dl.title">下载 DSHwork</h2>
+          <p class="section__sub" data-i18n="dl.sub">Windows 与 macOS,双击即用。开源、免费、可审计。</p>
+        </div>
+
+        <div class="dl-grid">
+          <a class="dl-card" href="./dist/D1.zip" download>
+            <div class="dl-icon">
+              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M3 3h18v18H3zM3 3l8 8 8-8M12 11v9"/></svg>
+            </div>
+            <div>
+              <h3 data-i18n="dl.win">Windows 版</h3>
+              <p data-i18n="dl.winSub">x64 · 安装程序(NSIS)</p>
+            </div>
+            <span class="dl-arrow" aria-hidden="true">↓</span>
+          </a>
+          <a class="dl-card" href="./dist/DSHwork-0.1.0.dmg" download>
+            <div class="dl-icon">
+              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M18.7 14.4c-.2-2.9 2-4.6 2.1-4.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-2-.9-3.2-.8-1.7 0-3.2 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.4 0 1.8.8 3.1.8 1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.3-3zM15.8 6.2c.7-.9 1.1-2 1-3.2-1 0-2.2.6-2.9 1.5-.6.7-1.2 1.9-1 3 .9.1 2-.5 2.9-1.3z"/></svg>
+            </div>
+            <div>
+              <h3 data-i18n="dl.mac">macOS 版</h3>
+              <p data-i18n="dl.macSub">Universal · DMG</p>
+            </div>
+            <span class="dl-arrow" aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <div class="dl-github">
+          <a class="btn btn--ghost btn--lg" href="https://github.com/DeepSeek-club/dshwork" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+            <span data-i18n="dl.github">GitHub 入口 · 源码与 Releases</span>
+          </a>
+        </div>
+
+        <p class="dl-note" data-i18n="dl.note">安装包尚未发布时,请以 GitHub Releases 为准。</p>
+      </div>
+    </section>
+
+    <!-- ===== COMMUNITY ===== -->
+    <section class="section community" id="community">
+      <div class="container community__inner">
+        <div class="section__head left">
+          <span class="section__kicker" data-i18n="community.kicker">COMMUNITY</span>
+          <h2 class="section__title" data-i18n="community.title">由深求社区 DeepSeek.club 出品</h2>
+          <p class="section__sub" data-i18n="community.sub">全球领先的第三方 DeepSeek 开源生态社区:模型库、插件库 Plugin Hub、应用榜、Harness 学院。DSHwork 是这些资产落地到你桌面上的"最后一公里"。</p>
+          <a class="community-cta" href="https://deepseek.club/" target="_blank" rel="noopener" data-i18n="community.club">访问 deepseek.club →</a>
+        </div>
+        <div class="dshclub-card">
+          <div class="dshclub-head">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg>
+            <strong data-i18n="dsh.title">DSH.club · Harness 专区</strong>
+          </div>
+          <p class="dshclub-text" data-i18n="dsh.text">关于 Harness 的一切,在这里讨论、获取、共建。</p>
+          <p class="dshclub-em" data-i18n="dsh.em">开源,放大你的价值!</p>
+          <a class="dshclub-link" href="https://dsh.club/" target="_blank" rel="noopener" data-i18n="dsh.cta">进入 DSH.club →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <span class="brand__mark sm"><img src="assets/img/favicon.png" alt="" /></span>
+        <span class="footer__brand-text">
+          <span class="line1">DSHwork</span>
+          <span class="line2"><span data-i18n="footer.tag">DeepSeek Agent 工作台</span> · <a class="footer__domain" href="https://dshwork.ai/">dshwork.ai</a></span>
+        </span>
+      </div>
+      <nav class="footer__links">
+        <a href="mailto:hello@deepseek.club"><span data-i18n="community.contact">联系我们:</span> <span>hello@deepseek.club</span></a>
+      </nav>
+    </div>
+    <div class="container footer__legal">
+      <p data-i18n="footer.legal">DSHwork 是由深求社区(DeepSeek.club)维护的独立社区开源项目,与深度求索 / DeepSeek 官方无隶属、合作、授权或背书关系。</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
