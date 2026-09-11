@@ -14,9 +14,19 @@ import os from 'node:os';
 
 const ROUTE = '/dshwork/api/plugins';
 const PROFILE_NAME = process.env.DSHWORK_HARNESS_PROFILE || 'web';
-/** 这些插件由 DSHwork 客户端内置挂载 / 是本插件自身,不允许被停用。 */
+/**
+ * 锁定名单:
+ *  - `@dshwork/*`(本插件自身,DSHwork 客户端启动时会重新挂载,关掉也会被加回来);
+ *  - `@deepseek-ai/dsh-base` / `@deepseek-ai/dsh-web-app`(harness 必需,关掉会起不来);
+ *  - `@deepseek-club/dsh-desktop`(负责写 launchers/web-url.txt 的 token,客户端依赖它)。
+ * 其余(皮肤、桌宠等)一律允许用户自行关闭。
+ */
 const PINNED_PREFIX = '@dshwork/';
-const PINNED = ['@deepseek-club/dsh-desktop', 'dsh-desktop-pet'];
+const PINNED = [
+  '@deepseek-ai/dsh-base',
+  '@deepseek-ai/dsh-web-app',
+  '@deepseek-club/dsh-desktop'
+];
 
 function dshHome() {
   return process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
