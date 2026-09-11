@@ -58,7 +58,7 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t".dsw-item{padding:10px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(0,0,0,.08));border-radius:10px;margin-bottom:8px}",
 \t\t\t\t".dsw-item b{display:block;font-size:14px}",
 \t\t\t\t".dsw-item span{font-size:12.5px;color:var(--dsw-alias-label-tertiary,#777)}",
-\t\t\t\t".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:8px 10px;margin:1px 0;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
+\t\t\t\t".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 \t\t\t\t".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 \t\t\t\t".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
 \t\t\t\t".dsw-corner{display:flex;align-items:center;gap:8px}",
@@ -73,14 +73,19 @@ const template = `window.__ModuleLoader__.load({
 \t\t})();
 
 \t\t// ── DOM 层:替换 hero 文案 + 藏预览角标 ──
+\t\t// 注意:只藏「角标元素本身」,不要藏它的父元素 —— 父元素里通常同时包着标题,
+\t\t// 藏父元素会把标题一起藏掉(之前的 bug)。
 \t\tfunction patchHero() {
 \t\t\tif (typeof document === "undefined") return;
-\t\t\tconst spans = document.querySelectorAll("span");
-\t\t\tfor (const el of spans) {
+\t\t\tconst els = document.querySelectorAll("span,div");
+\t\t\tfor (const el of els) {
 \t\t\t\tif (el.children.length !== 0) continue;
 \t\t\t\tconst txt = (el.textContent || "").trim();
-\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) el.textContent = HERO_HEADLINE;
-\t\t\t\telse if (PREVIEW_OLD.indexOf(txt) !== -1 && el.parentElement) el.parentElement.style.display = "none";
+\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\tel.textContent = HERO_HEADLINE;
+\t\t\t\t} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\tel.style.display = "none";
+\t\t\t\t}
 \t\t\t}
 \t\t}
 \t\tif (typeof window !== "undefined" && typeof document !== "undefined") {
