@@ -280,7 +280,7 @@ window.__ModuleLoader__.load({
 							: items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
 								React.createElement("div", { className: "dsw-item-main" },
 									React.createElement("b", null, it.name),
-									React.createElement("span", null, it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开")),
+									React.createElement("span", null, it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开"))),
 								React.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) })))),
 					React.createElement("div", { className: "dsw-foot" },
 						React.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。"))));
