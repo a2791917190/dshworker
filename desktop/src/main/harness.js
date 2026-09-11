@@ -321,12 +321,25 @@ async function bootHarness(mode = 'bundled', options = {}) {
     const mount = await ensureWorkbenchMounted({ node: runtime.node, dshBin: dshBin || undefined });
     log('[profile-mount] result:', mount ? (mount.ok ? 'mounted' : `not-mounted:${mount.reason}`) : 'skipped');
   } else {
+    // 清掉当前 home 的 profile,以及全局 ~/.dsh 里可能被旧版挂过的 profile,
+    // 保证页面回到原生 harness。
+    const profileName = defaultProfileName();
+    const targets = [profileDirFor(profileName)];
     try {
-      const removed = removeWorkbenchMounted(profileDirFor(defaultProfileName()));
-      log('[profile-mount] native harness; workbench plugin unmounted:', removed ? 'yes' : 'nothing-to-remove');
-    } catch (err) {
-      log('[profile-mount] unmount skipped:', err && err.message);
+      const globalProfile = path.join(os.homedir(), '.dsh', 'profiles', profileName);
+      if (!targets.includes(globalProfile)) targets.push(globalProfile);
+    } catch (_) {
+      /* ignore */
     }
+    let removedAny = false;
+    for (const dir of targets) {
+      try {
+        if (removeWorkbenchMounted(dir)) removedAny = true;
+      } catch (err) {
+        log('[profile-mount] unmount skipped for', dir, ':', err && err.message);
+      }
+    }
+    log('[profile-mount] native harness; workbench plugin unmounted:', removedAny ? 'yes' : 'nothing-to-remove');
   }
 
   // 捕获 harness 输出,用于提取其网页 auth token(dsh web 打印的 ?token=)。
