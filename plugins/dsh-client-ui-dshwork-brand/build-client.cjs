@@ -65,6 +65,10 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
 \t\t\t\t".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
 \t\t\t\t".dsw-ref:hover{background:rgba(0,0,0,.06)}",
+\t\t\t\t".dsw-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
+\t\t\t\t".dsw-hint{flex:1;font-size:12px;color:#8a8a8a}",
+\t\t\t\t".dsw-save{border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;background:#141414;color:#fff;font-family:inherit}",
+\t\t\t\t".dsw-save:disabled{background:rgba(0,0,0,.15);cursor:default}",
 \t\t\t\t".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 \t\t\t\t".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 \t\t\t\t".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
@@ -111,6 +115,37 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t/* ignore */
 \t\t\t}
 \t\t}
+\t\t// 侧边栏左上角品牌 mark:官方 FishLogo(svg)→ 换成我们的 logo。
+\t\tfunction patchSidebarBrand() {
+\t\t\ttry {
+\t\t\t\tif (document.querySelector("img[data-dshwork-brand-mark]")) return;
+\t\t\t\tconst nodes = document.querySelectorAll("span,div");
+\t\t\t\tfor (const el of nodes) {
+\t\t\t\t\tif (el.children.length !== 0) continue;
+\t\t\t\t\tif ((el.textContent || "").trim() !== "deepseek") continue;
+\t\t\t\t\tlet row = el.parentElement;
+\t\t\t\t\tfor (let i = 0; i < 3 && row; i++) {
+\t\t\t\t\t\tconst svg = row.querySelector("svg");
+\t\t\t\t\t\tif (svg && svg.parentElement) {
+\t\t\t\t\t\t\tconst s = Math.round(svg.getBoundingClientRect().width) || 24;
+\t\t\t\t\t\t\tconst img = document.createElement("img");
+\t\t\t\t\t\t\timg.src = MARK;
+\t\t\t\t\t\t\timg.setAttribute("data-dshwork-brand-mark", "true");
+\t\t\t\t\t\t\timg.alt = "dshwork";
+\t\t\t\t\t\t\timg.width = s;
+\t\t\t\t\t\t\timg.height = s;
+\t\t\t\t\t\t\timg.style.objectFit = "contain";
+\t\t\t\t\t\t\timg.style.display = "block";
+\t\t\t\t\t\t\tsvg.replaceWith(img);
+\t\t\t\t\t\t\treturn;
+\t\t\t\t\t\t}
+\t\t\t\t\t\trow = row.parentElement;
+\t\t\t\t\t}
+\t\t\t\t}
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t}
 \t\tfunction patchHero() {
 \t\t\tif (patching || typeof document === "undefined") return;
 \t\t\tpatching = true;
@@ -130,6 +165,7 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t\tel.style.display = "none";
 \t\t\t\t\t}
 \t\t\t\t}
+\t\t\t\tpatchSidebarBrand();
 \t\t\t} finally {
 \t\t\t\tpatching = false;
 \t\t\t}
@@ -196,8 +232,36 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t: React.createElement("button", { type: "button", className: "dsw-ref", title: "引用此技能", onClick: () => {} }, "引用"));
 \t\t}
 
+\t\t// 插件开关的本地偏好(存 localStorage,键名按面板区分)
+\t\tfunction loadPrefs(key, n) {
+\t\t\ttry {
+\t\t\t\tconst raw = window.localStorage.getItem(key);
+\t\t\t\tif (raw) {
+\t\t\t\t\tconst arr = JSON.parse(raw);
+\t\t\t\t\tif (Array.isArray(arr) && arr.length === n) return arr.map(Boolean);
+\t\t\t\t}
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t\treturn null;
+\t\t}
+
 \t\tfunction Panel({ title, items, kind, onClose }) {
-\t\t\tconst [states, setStates] = useState(() => items.map(() => true));
+\t\t\tconst prefKey = "dshwork." + kind;
+\t\t\tconst [saved, setSaved] = useState(() => loadPrefs(prefKey, items.length) || items.map(() => true));
+\t\t\tconst [states, setStates] = useState(() => saved.slice());
+\t\t\tconst [justSaved, setJustSaved] = useState(false);
+\t\t\tconst dirty = states.some((v, i) => v !== saved[i]);
+\t\t\tfunction save() {
+\t\t\t\ttry {
+\t\t\t\t\twindow.localStorage.setItem(prefKey, JSON.stringify(states));
+\t\t\t\t} catch (_) {
+\t\t\t\t\t/* ignore */
+\t\t\t\t}
+\t\t\t\tsetSaved(states.slice());
+\t\t\t\tsetJustSaved(true);
+\t\t\t\tsetTimeout(() => setJustSaved(false), 1600);
+\t\t\t}
 \t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 \t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 \t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
@@ -210,7 +274,10 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t\t\tkind: kind,
 \t\t\t\t\t\t\ton: states[i],
 \t\t\t\t\t\t\tonToggle: (v) => setStates((prev) => prev.map((x, j) => (j === i ? v : x)))
-\t\t\t\t\t\t})))));
+\t\t\t\t\t\t}))),
+\t\t\t\t\tkind === "plugins" ? React.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, justSaved ? "已保存(本地偏好,重启后生效)" : "开关为本地偏好,不会真正停用插件"),
+\t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-save", disabled: !dirty, onClick: save }, "保存")) : null));
 \t\t}
 
 \t\tfunction Overlay() {

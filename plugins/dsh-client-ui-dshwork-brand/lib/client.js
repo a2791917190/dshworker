@@ -43,6 +43,10 @@ window.__ModuleLoader__.load({
 				".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
 				".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
 				".dsw-ref:hover{background:rgba(0,0,0,.06)}",
+				".dsw-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
+				".dsw-hint{flex:1;font-size:12px;color:#8a8a8a}",
+				".dsw-save{border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;background:#141414;color:#fff;font-family:inherit}",
+				".dsw-save:disabled{background:rgba(0,0,0,.15);cursor:default}",
 				".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 				".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 				".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
@@ -89,6 +93,37 @@ window.__ModuleLoader__.load({
 				/* ignore */
 			}
 		}
+		// 侧边栏左上角品牌 mark:官方 FishLogo(svg)→ 换成我们的 logo。
+		function patchSidebarBrand() {
+			try {
+				if (document.querySelector("img[data-dshwork-brand-mark]")) return;
+				const nodes = document.querySelectorAll("span,div");
+				for (const el of nodes) {
+					if (el.children.length !== 0) continue;
+					if ((el.textContent || "").trim() !== "deepseek") continue;
+					let row = el.parentElement;
+					for (let i = 0; i < 3 && row; i++) {
+						const svg = row.querySelector("svg");
+						if (svg && svg.parentElement) {
+							const s = Math.round(svg.getBoundingClientRect().width) || 24;
+							const img = document.createElement("img");
+							img.src = MARK;
+							img.setAttribute("data-dshwork-brand-mark", "true");
+							img.alt = "dshwork";
+							img.width = s;
+							img.height = s;
+							img.style.objectFit = "contain";
+							img.style.display = "block";
+							svg.replaceWith(img);
+							return;
+						}
+						row = row.parentElement;
+					}
+				}
+			} catch (_) {
+				/* ignore */
+			}
+		}
 		function patchHero() {
 			if (patching || typeof document === "undefined") return;
 			patching = true;
@@ -108,6 +143,7 @@ window.__ModuleLoader__.load({
 						el.style.display = "none";
 					}
 				}
+				patchSidebarBrand();
 			} finally {
 				patching = false;
 			}
@@ -174,8 +210,36 @@ window.__ModuleLoader__.load({
 					: React.createElement("button", { type: "button", className: "dsw-ref", title: "引用此技能", onClick: () => {} }, "引用"));
 		}
 
+		// 插件开关的本地偏好(存 localStorage,键名按面板区分)
+		function loadPrefs(key, n) {
+			try {
+				const raw = window.localStorage.getItem(key);
+				if (raw) {
+					const arr = JSON.parse(raw);
+					if (Array.isArray(arr) && arr.length === n) return arr.map(Boolean);
+				}
+			} catch (_) {
+				/* ignore */
+			}
+			return null;
+		}
+
 		function Panel({ title, items, kind, onClose }) {
-			const [states, setStates] = useState(() => items.map(() => true));
+			const prefKey = "dshwork." + kind;
+			const [saved, setSaved] = useState(() => loadPrefs(prefKey, items.length) || items.map(() => true));
+			const [states, setStates] = useState(() => saved.slice());
+			const [justSaved, setJustSaved] = useState(false);
+			const dirty = states.some((v, i) => v !== saved[i]);
+			function save() {
+				try {
+					window.localStorage.setItem(prefKey, JSON.stringify(states));
+				} catch (_) {
+					/* ignore */
+				}
+				setSaved(states.slice());
+				setJustSaved(true);
+				setTimeout(() => setJustSaved(false), 1600);
+			}
 			return React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 				React.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 					React.createElement("div", { className: "dsw-top" },
@@ -188,7 +252,10 @@ window.__ModuleLoader__.load({
 							kind: kind,
 							on: states[i],
 							onToggle: (v) => setStates((prev) => prev.map((x, j) => (j === i ? v : x)))
-						})))));
+						}))),
+					kind === "plugins" ? React.createElement("div", { className: "dsw-foot" },
+						React.createElement("span", { className: "dsw-hint" }, justSaved ? "已保存(本地偏好,重启后生效)" : "开关为本地偏好,不会真正停用插件"),
+						React.createElement("button", { type: "button", className: "dsw-save", disabled: !dirty, onClick: save }, "保存")) : null));
 		}
 
 		function Overlay() {
