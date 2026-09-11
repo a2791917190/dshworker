@@ -306,18 +306,18 @@ window.__ModuleLoader__.load({
 					.catch((e) => setState({ status: "error", items: [], source: "", error: e.message }));
 			};
 			React.useEffect(load, []);
-			function install(name, version) {
+			function install(it) {
 				setMsg("");
-				setInstalling(name);
+				setInstalling(it.name);
 				fetch("/dshwork/api/market/install", {
 					method: "POST",
 					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ name: name, version: version || undefined })
+					body: JSON.stringify({ name: it.name, version: it.version || undefined, downloadUrl: it.download || undefined })
 				})
 					.then((r) => r.json())
 					.then((d) => {
 						setInstalling("");
-						if (d && d.ok) setMsg("已安装:" + name + ",重启 harness 后生效");
+						if (d && d.ok) setMsg("已安装:" + it.name + (d.mode === "archive" ? "(文件包)" : "") + ",重启 harness 后生效");
 						else setMsg("安装失败:" + ((d && d.error) || "未知错误"));
 					})
 					.catch((e) => { setInstalling(""); setMsg("安装失败:" + e.message); });
@@ -336,8 +336,8 @@ window.__ModuleLoader__.load({
 								type: "button",
 								className: "dsw-ref",
 								disabled: installing === it.name,
-								onClick: () => install(it.name, it.version)
-							}, installing === it.name ? "安装中…" : "安装")));
+								onClick: () => install(it)
+							}, installing === it.name ? "安装中…" : (it.download ? "安装(文件包)" : "安装"))));
 			return React.createElement("div", null,
 				React.createElement("div", { className: "dsw-body" }, body),
 				React.createElement("div", { className: "dsw-foot" },

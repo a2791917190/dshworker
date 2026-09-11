@@ -328,18 +328,18 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t.catch((e) => setState({ status: "error", items: [], source: "", error: e.message }));
 \t\t\t};
 \t\t\tReact.useEffect(load, []);
-\t\t\tfunction install(name, version) {
+\t\t\tfunction install(it) {
 \t\t\t\tsetMsg("");
-\t\t\t\tsetInstalling(name);
+\t\t\t\tsetInstalling(it.name);
 \t\t\t\tfetch("/dshwork/api/market/install", {
 \t\t\t\t\tmethod: "POST",
 \t\t\t\t\theaders: { "content-type": "application/json" },
-\t\t\t\t\tbody: JSON.stringify({ name: name, version: version || undefined })
+\t\t\t\t\tbody: JSON.stringify({ name: it.name, version: it.version || undefined, downloadUrl: it.download || undefined })
 \t\t\t\t})
 \t\t\t\t\t.then((r) => r.json())
 \t\t\t\t\t.then((d) => {
 \t\t\t\t\t\tsetInstalling("");
-\t\t\t\t\t\tif (d && d.ok) setMsg("已安装:" + name + ",重启 harness 后生效");
+\t\t\t\t\t\tif (d && d.ok) setMsg("已安装:" + it.name + (d.mode === "archive" ? "(文件包)" : "") + ",重启 harness 后生效");
 \t\t\t\t\t\telse setMsg("安装失败:" + ((d && d.error) || "未知错误"));
 \t\t\t\t\t})
 \t\t\t\t\t.catch((e) => { setInstalling(""); setMsg("安装失败:" + e.message); });
@@ -358,8 +358,8 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t\t\t\ttype: "button",
 \t\t\t\t\t\t\t\tclassName: "dsw-ref",
 \t\t\t\t\t\t\t\tdisabled: installing === it.name,
-\t\t\t\t\t\t\t\tonClick: () => install(it.name, it.version)
-\t\t\t\t\t\t\t}, installing === it.name ? "安装中…" : "安装")));
+\t\t\t\t\t\t\t\tonClick: () => install(it)
+\t\t\t\t\t\t\t}, installing === it.name ? "安装中…" : (it.download ? "安装(文件包)" : "安装"))));
 \t\t\treturn React.createElement("div", null,
 \t\t\t\tReact.createElement("div", { className: "dsw-body" }, body),
 \t\t\t\tReact.createElement("div", { className: "dsw-foot" },
