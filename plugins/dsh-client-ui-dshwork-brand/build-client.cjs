@@ -302,7 +302,7 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\t\t\t: items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
 \t\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
 \t\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
-\t\t\t\t\t\t\t\t\tReact.createElement("span", null, it.pinned ? "内置,不可停用" : "来自 profile 插件名单")),
+\t\t\t\t\t\t\t\t\tReact.createElement("span", null, it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开")),
 \t\t\t\t\t\t\t\tReact.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) })))),
 \t\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
 \t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。"))));

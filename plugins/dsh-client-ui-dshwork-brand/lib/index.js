@@ -49,9 +49,20 @@ function isPinned(name) {
   return PINNED.indexOf(name) !== -1 || name.indexOf(PINNED_PREFIX) === 0;
 }
 
+/**
+ * 列出「全部已安装插件」:profile 的 dependencies ∪ bundles。
+ * 关键:已关闭的插件(在 dependencies、不在 bundles)也要列出来并标 enabled=false,
+ * 否则用户一关就再也找不到、无法重新打开。
+ */
 function listPlugins() {
-  const { bundles } = readProfile();
-  return bundles.map((name) => ({ name, enabled: true, pinned: isPinned(name) }));
+  const { pkg, bundles } = readProfile();
+  const deps = Object.keys(pkg.dependencies || {});
+  const names = Array.from(new Set(deps.concat(bundles)));
+  return names.map((name) => ({
+    name,
+    enabled: bundles.indexOf(name) !== -1,
+    pinned: isPinned(name)
+  }));
 }
 
 function setEnabled(name, enabled) {
