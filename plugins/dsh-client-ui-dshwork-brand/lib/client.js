@@ -37,16 +37,11 @@ window.__ModuleLoader__.load({
 				".dsw-item-main{flex:1;min-width:0}",
 				".dsw-item b{display:block;font-size:14px;color:#141414}",
 				".dsw-item-main span{font-size:12.5px;color:#7a7a7a}",
-				".dsw-switch{position:relative;flex:none;width:38px;height:22px;border-radius:11px;border:none;background:rgba(0,0,0,.2);cursor:pointer;padding:0;transition:background .15s}",
-				".dsw-switch.on{background:#3b82f6}",
-				".dsw-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}",
-				".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
+				".dsw-badge{flex:none;font-size:12px;color:#1f9d55;background:rgba(31,157,85,.12);border-radius:999px;padding:3px 10px}",
 				".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
 				".dsw-ref:hover{background:rgba(0,0,0,.06)}",
-				".dsw-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
+				".dsw-foot{display:flex;align-items:center;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
 				".dsw-hint{flex:1;font-size:12px;color:#8a8a8a}",
-				".dsw-save{border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;background:#141414;color:#fff;font-family:inherit}",
-				".dsw-save:disabled{background:rgba(0,0,0,.15);cursor:default}",
 				".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 				".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 				".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
@@ -97,28 +92,23 @@ window.__ModuleLoader__.load({
 		function patchSidebarBrand() {
 			try {
 				if (document.querySelector("img[data-dshwork-brand-mark]")) return;
-				const nodes = document.querySelectorAll("span,div");
-				for (const el of nodes) {
-					if (el.children.length !== 0) continue;
-					if ((el.textContent || "").trim() !== "deepseek") continue;
-					let row = el.parentElement;
-					for (let i = 0; i < 3 && row; i++) {
-						const svg = row.querySelector("svg");
-						if (svg && svg.parentElement) {
-							const s = Math.round(svg.getBoundingClientRect().width) || 24;
-							const img = document.createElement("img");
-							img.src = MARK;
-							img.setAttribute("data-dshwork-brand-mark", "true");
-							img.alt = "dshwork";
-							img.width = s;
-							img.height = s;
-							img.style.objectFit = "contain";
-							img.style.display = "block";
-							svg.replaceWith(img);
-							return;
-						}
-						row = row.parentElement;
-					}
+				// 品牌名是矢量字(不是文本节点),所以按「位置」找:左上角那块 svg。
+				const svgs = document.querySelectorAll("svg");
+				for (const svg of svgs) {
+					const r = svg.getBoundingClientRect();
+					if (r.width < 14 || r.width > 64 || r.height < 14 || r.height > 64) continue;
+					if (r.left > 132 || r.top > 96) continue; // 必须在左上角
+					const s = Math.round(r.width) || 24;
+					const img = document.createElement("img");
+					img.src = MARK;
+					img.setAttribute("data-dshwork-brand-mark", "true");
+					img.alt = "dshwork";
+					img.width = s;
+					img.height = s;
+					img.style.objectFit = "contain";
+					img.style.display = "block";
+					svg.replaceWith(img);
+					return;
 				}
 			} catch (_) {
 				/* ignore */
@@ -163,8 +153,8 @@ window.__ModuleLoader__.load({
 			{ name: "DSHwork 品牌", desc: "品牌 logo、首页文案与入口(本插件)" }
 		];
 		const SKILLS = [
-			{ name: "报告生成", desc: "把多来源信息整合成结构化报告 / 方案" },
-			{ name: "文献检索", desc: "多源检索、归纳要点与引用" }
+			{ name: "报告生成", desc: "把多来源信息整合成结构化报告 / 方案", cite: "请使用「报告生成」技能:" },
+			{ name: "文献检索", desc: "多源检索、归纳要点与引用", cite: "请使用「文献检索」技能:" }
 		];
 
 		// ── 组件 ──
@@ -189,73 +179,58 @@ window.__ModuleLoader__.load({
 				React.createElement("span", null, label));
 		}
 
-		function Switch({ on, onToggle }) {
-			return React.createElement("button", {
-				type: "button",
-				className: "dsw-switch" + (on ? " on" : ""),
-				role: "switch",
-				"aria-checked": on ? "true" : "false",
-				title: on ? "已启用" : "已停用",
-				onClick: (e) => { e.stopPropagation(); onToggle(!on); }
-			}, React.createElement("span", { className: "dsw-knob" }));
-		}
-
-		function PanelItem({ item, kind, on, onToggle }) {
-			return React.createElement("div", { className: "dsw-item" },
-				React.createElement("div", { className: "dsw-item-main" },
-					React.createElement("b", null, item.name),
-					React.createElement("span", null, item.desc)),
-				kind === "plugins"
-					? React.createElement(Switch, { on: on, onToggle: onToggle })
-					: React.createElement("button", { type: "button", className: "dsw-ref", title: "引用此技能", onClick: () => {} }, "引用"));
-		}
-
-		// 插件开关的本地偏好(存 localStorage,键名按面板区分)
-		function loadPrefs(key, n) {
+		// 把技能引用插进输入框(真的写进 composer)。
+		function insertToComposer(text) {
 			try {
-				const raw = window.localStorage.getItem(key);
-				if (raw) {
-					const arr = JSON.parse(raw);
-					if (Array.isArray(arr) && arr.length === n) return arr.map(Boolean);
+				const ta = document.querySelector("textarea");
+				if (ta) {
+					const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+					const next = (ta.value || "") + text;
+					if (setter) setter.call(ta, next);
+					else ta.value = next;
+					ta.dispatchEvent(new Event("input", { bubbles: true }));
+					ta.focus();
+					return true;
+				}
+				const ce = document.querySelector('[contenteditable="true"]');
+				if (ce) {
+					ce.textContent = (ce.textContent || "") + text;
+					ce.dispatchEvent(new Event("input", { bubbles: true }));
+					ce.focus();
+					return true;
 				}
 			} catch (_) {
 				/* ignore */
 			}
-			return null;
+			return false;
+		}
+
+		function PanelItem({ item, kind, onClose }) {
+			const action = kind === "plugins"
+				? React.createElement("span", { className: "dsw-badge" }, "已启用")
+				: React.createElement("button", {
+					type: "button",
+					className: "dsw-ref",
+					title: "把该技能插入输入框",
+					onClick: () => { insertToComposer((item.cite || item.name) + " "); if (onClose) onClose(); }
+				}, "引用");
+			return React.createElement("div", { className: "dsw-item" },
+				React.createElement("div", { className: "dsw-item-main" },
+					React.createElement("b", null, item.name),
+					React.createElement("span", null, item.desc)),
+				action);
 		}
 
 		function Panel({ title, items, kind, onClose }) {
-			const prefKey = "dshwork." + kind;
-			const [saved, setSaved] = useState(() => loadPrefs(prefKey, items.length) || items.map(() => true));
-			const [states, setStates] = useState(() => saved.slice());
-			const [justSaved, setJustSaved] = useState(false);
-			const dirty = states.some((v, i) => v !== saved[i]);
-			function save() {
-				try {
-					window.localStorage.setItem(prefKey, JSON.stringify(states));
-				} catch (_) {
-					/* ignore */
-				}
-				setSaved(states.slice());
-				setJustSaved(true);
-				setTimeout(() => setJustSaved(false), 1600);
-			}
 			return React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 				React.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 					React.createElement("div", { className: "dsw-top" },
 						React.createElement("span", { className: "dsw-brand" }, title),
 						React.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\u00d7")),
 					React.createElement("div", { className: "dsw-body" },
-						items.map((it, i) => React.createElement(PanelItem, {
-							key: it.name,
-							item: it,
-							kind: kind,
-							on: states[i],
-							onToggle: (v) => setStates((prev) => prev.map((x, j) => (j === i ? v : x)))
-						}))),
+						items.map((it) => React.createElement(PanelItem, { key: it.name, item: it, kind: kind, onClose: onClose }))),
 					kind === "plugins" ? React.createElement("div", { className: "dsw-foot" },
-						React.createElement("span", { className: "dsw-hint" }, justSaved ? "已保存(本地偏好,重启后生效)" : "开关为本地偏好,不会真正停用插件"),
-						React.createElement("button", { type: "button", className: "dsw-save", disabled: !dirty, onClick: save }, "保存")) : null));
+						React.createElement("span", { className: "dsw-hint" }, "harness 未开放插件启停接口,此处仅显示已启用的插件。")) : null));
 		}
 
 		function Overlay() {
