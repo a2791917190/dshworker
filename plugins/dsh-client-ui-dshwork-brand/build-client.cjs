@@ -83,6 +83,27 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\tp = p.parentElement;
 \t\t\t}
 \t\t}
+\t\t// 把首页品牌区改成「竖排居中」:logo 在上、文字在下。
+\t\tfunction restructureHero(headlineEl) {
+\t\t\ttry {
+\t\t\t\tconst group = headlineEl.parentElement; // titleGroup(标题 + 角标)
+\t\t\t\tif (!group) return;
+\t\t\t\tconst row = group.parentElement; // 品牌行(logo + titleGroup)
+\t\t\t\tif (row && row !== document.body) {
+\t\t\t\t\trow.style.display = "flex";
+\t\t\t\t\trow.style.flexDirection = "column";
+\t\t\t\t\trow.style.alignItems = "center";
+\t\t\t\t\trow.style.justifyContent = "center";
+\t\t\t\t\trow.style.gap = "14px";
+\t\t\t\t}
+\t\t\t\tgroup.style.display = "flex";
+\t\t\t\tgroup.style.flexDirection = "column";
+\t\t\t\tgroup.style.alignItems = "center";
+\t\t\t\tgroup.style.gap = "8px";
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t}
 \t\tfunction patchHero() {
 \t\t\tif (patching || typeof document === "undefined") return;
 \t\t\tpatching = true;
@@ -94,8 +115,10 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) {
 \t\t\t\t\t\trevealChain(el);
 \t\t\t\t\t\tel.textContent = HERO_HEADLINE;
+\t\t\t\t\t\trestructureHero(el);
 \t\t\t\t\t} else if (txt === HERO_HEADLINE) {
 \t\t\t\t\t\trevealChain(el);
+\t\t\t\t\t\trestructureHero(el);
 \t\t\t\t\t} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
 \t\t\t\t\t\tel.style.display = "none";
 \t\t\t\t\t}

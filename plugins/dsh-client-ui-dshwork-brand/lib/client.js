@@ -61,6 +61,27 @@ window.__ModuleLoader__.load({
 				p = p.parentElement;
 			}
 		}
+		// 把首页品牌区改成「竖排居中」:logo 在上、文字在下。
+		function restructureHero(headlineEl) {
+			try {
+				const group = headlineEl.parentElement; // titleGroup(标题 + 角标)
+				if (!group) return;
+				const row = group.parentElement; // 品牌行(logo + titleGroup)
+				if (row && row !== document.body) {
+					row.style.display = "flex";
+					row.style.flexDirection = "column";
+					row.style.alignItems = "center";
+					row.style.justifyContent = "center";
+					row.style.gap = "14px";
+				}
+				group.style.display = "flex";
+				group.style.flexDirection = "column";
+				group.style.alignItems = "center";
+				group.style.gap = "8px";
+			} catch (_) {
+				/* ignore */
+			}
+		}
 		function patchHero() {
 			if (patching || typeof document === "undefined") return;
 			patching = true;
@@ -72,8 +93,10 @@ window.__ModuleLoader__.load({
 					if (HERO_OLD.indexOf(txt) !== -1) {
 						revealChain(el);
 						el.textContent = HERO_HEADLINE;
+						restructureHero(el);
 					} else if (txt === HERO_HEADLINE) {
 						revealChain(el);
+						restructureHero(el);
 					} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
 						el.style.display = "none";
 					}
