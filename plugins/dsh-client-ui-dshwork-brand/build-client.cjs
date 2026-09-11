@@ -26,7 +26,7 @@ const template = `window.__ModuleLoader__.load({
 \t\tvar module = { exports: {} };
 \t\tvar exports = module.exports;
 \t\tvar React = require("react");
-\t\tconst { useSyncExternalStore } = React;
+\t\tconst { useState, useSyncExternalStore } = React;
 
 \t\tconst MARK = __MARK__;
 \t\tconst HERO_HEADLINE = "让DSH Work 帮你高效完成工作任务！";
@@ -50,14 +50,21 @@ const template = `window.__ModuleLoader__.load({
 \t\t\tif (document.querySelector("style[data-dshwork-brand]") !== null) return;
 \t\t\tconst css = [
 \t\t\t\t".dsw-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(4,8,16,.5);padding:24px;box-sizing:border-box}",
-\t\t\t\t".dsw-panel{width:min(680px,100%);max-height:86vh;overflow:auto;background:var(--dsw-alias-bg-base,#fff);color:var(--dsw-alias-label-primary,#111);border:1px solid var(--dsw-alias-border-l1,rgba(0,0,0,.1));border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.35)}",
+\t\t\t\t".dsw-panel{width:min(680px,100%);max-height:86vh;overflow:auto;background:#ffffff;color:#141414;border:1px solid rgba(0,0,0,.12);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.45)}",
 \t\t\t\t".dsw-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--dsw-alias-border-l1,rgba(0,0,0,.08))}",
 \t\t\t\t".dsw-brand{font-weight:700}",
 \t\t\t\t".dsw-close{background:0 0;border:none;font-size:20px;line-height:1;cursor:pointer;color:var(--dsw-alias-label-secondary,#888)}",
 \t\t\t\t".dsw-body{padding:16px 18px}",
-\t\t\t\t".dsw-item{padding:10px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(0,0,0,.08));border-radius:10px;margin-bottom:8px}",
-\t\t\t\t".dsw-item b{display:block;font-size:14px}",
-\t\t\t\t".dsw-item span{font-size:12.5px;color:var(--dsw-alias-label-tertiary,#777)}",
+\t\t\t\t".dsw-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(0,0,0,.1);border-radius:10px;margin-bottom:8px;background:#fff}",
+\t\t\t\t".dsw-item-main{flex:1;min-width:0}",
+\t\t\t\t".dsw-item b{display:block;font-size:14px;color:#141414}",
+\t\t\t\t".dsw-item-main span{font-size:12.5px;color:#7a7a7a}",
+\t\t\t\t".dsw-switch{position:relative;flex:none;width:38px;height:22px;border-radius:11px;border:none;background:rgba(0,0,0,.2);cursor:pointer;padding:0;transition:background .15s}",
+\t\t\t\t".dsw-switch.on{background:#3b82f6}",
+\t\t\t\t".dsw-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}",
+\t\t\t\t".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
+\t\t\t\t".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
+\t\t\t\t".dsw-ref:hover{background:rgba(0,0,0,.06)}",
 \t\t\t\t".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 \t\t\t\t".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 \t\t\t\t".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
@@ -168,23 +175,54 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\tReact.createElement("span", null, label));
 \t\t}
 
-\t\tfunction Panel({ title, items, onClose }) {
+\t\tfunction Switch({ on, onToggle }) {
+\t\t\treturn React.createElement("button", {
+\t\t\t\ttype: "button",
+\t\t\t\tclassName: "dsw-switch" + (on ? " on" : ""),
+\t\t\t\trole: "switch",
+\t\t\t\t"aria-checked": on ? "true" : "false",
+\t\t\t\ttitle: on ? "已启用" : "已停用",
+\t\t\t\tonClick: (e) => { e.stopPropagation(); onToggle(!on); }
+\t\t\t}, React.createElement("span", { className: "dsw-knob" }));
+\t\t}
+
+\t\tfunction PanelItem({ item, kind, on, onToggle }) {
+\t\t\treturn React.createElement("div", { className: "dsw-item" },
+\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\tReact.createElement("b", null, item.name),
+\t\t\t\t\tReact.createElement("span", null, item.desc)),
+\t\t\t\tkind === "plugins"
+\t\t\t\t\t? React.createElement(Switch, { on: on, onToggle: onToggle })
+\t\t\t\t\t: React.createElement("button", { type: "button", className: "dsw-ref", title: "引用此技能", onClick: () => {} }, "引用"));
+\t\t}
+
+\t\tfunction Panel({ title, items, kind, onClose }) {
+\t\t\tconst [states, setStates] = useState(() => items.map(() => true));
 \t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 \t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 \t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
 \t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, title),
 \t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\\u00d7")),
 \t\t\t\t\tReact.createElement("div", { className: "dsw-body" },
-\t\t\t\t\t\titems.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
-\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
-\t\t\t\t\t\t\tReact.createElement("span", null, it.desc))))));
+\t\t\t\t\t\titems.map((it, i) => React.createElement(PanelItem, {
+\t\t\t\t\t\t\tkey: it.name,
+\t\t\t\t\t\t\titem: it,
+\t\t\t\t\t\t\tkind: kind,
+\t\t\t\t\t\t\ton: states[i],
+\t\t\t\t\t\t\tonToggle: (v) => setStates((prev) => prev.map((x, j) => (j === i ? v : x)))
+\t\t\t\t\t\t})))));
 \t\t}
 
 \t\tfunction Overlay() {
 \t\t\tconst page = useSyncExternalStore(store.subscribe, store.getSnapshot);
 \t\t\tif (!page) return null;
 \t\t\tconst isPlugins = page === "plugins";
-\t\t\treturn React.createElement(Panel, { title: isPlugins ? "我的插件" : "技能", items: isPlugins ? PLUGINS : SKILLS, onClose: store.close });
+\t\t\treturn React.createElement(Panel, {
+\t\t\t\ttitle: isPlugins ? "我的插件" : "技能",
+\t\t\t\titems: isPlugins ? PLUGINS : SKILLS,
+\t\t\t\tkind: isPlugins ? "plugins" : "skills",
+\t\t\t\tonClose: store.close
+\t\t\t});
 \t\t}
 
 \t\tfunction FooterAction() {
