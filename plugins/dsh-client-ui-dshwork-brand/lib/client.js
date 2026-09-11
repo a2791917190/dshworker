@@ -32,6 +32,9 @@ window.__ModuleLoader__.load({
 				".dsw-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--dsw-alias-border-l1,rgba(0,0,0,.08))}",
 				".dsw-brand{font-weight:700}",
 				".dsw-close{background:0 0;border:none;font-size:20px;line-height:1;cursor:pointer;color:var(--dsw-alias-label-secondary,#888)}",
+				".dsw-tabs{display:flex;gap:20px;padding:0 18px;border-bottom:1px solid rgba(0,0,0,.08)}",
+				".dsw-tab{background:0 0;border:none;border-bottom:2px solid transparent;padding:10px 2px;font-size:13.5px;cursor:pointer;color:#6b6b6b;font-family:inherit}",
+				".dsw-tab.on{color:#141414;border-bottom-color:#3b82f6;font-weight:600}",
 				".dsw-body{padding:16px 18px}",
 				".dsw-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(0,0,0,.1);border-radius:10px;margin-bottom:8px;background:#fff}",
 				".dsw-item-main{flex:1;min-width:0}",
@@ -244,8 +247,8 @@ window.__ModuleLoader__.load({
 						React.createElement("span", { className: "dsw-hint" }, "点「引用」会把技能写进输入框。"))));
 		}
 
-		// 插件面板:走 host 的真实接口
-		function PluginsPanel({ onClose }) {
+		// 已安装:走 host 的真实接口
+		function InstalledTab() {
 			const [items, setItems] = useState(null);
 			const [msg, setMsg] = useState("");
 			const load = () => {
@@ -269,21 +272,94 @@ window.__ModuleLoader__.load({
 					})
 					.catch((e) => setMsg("失败:" + e.message));
 			}
+			const body = items === null
+				? React.createElement("div", { className: "dsw-hint" }, "读取中…")
+				: items.length === 0
+					? React.createElement("div", { className: "dsw-hint" }, "读取失败:host 接口未就绪(重启 harness 后可用)")
+					: items.map((it) => {
+						const desc = it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开");
+						return React.createElement("div", { className: "dsw-item", key: it.name },
+							React.createElement("div", { className: "dsw-item-main" },
+								React.createElement("b", null, it.name),
+								React.createElement("span", null, desc)),
+							React.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) }));
+					});
+			return React.createElement("div", null,
+				React.createElement("div", { className: "dsw-body" }, body),
+				React.createElement("div", { className: "dsw-foot" },
+					React.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。")));
+		}
+
+		// 插件市场:从外部源拉取,可安装
+		function MarketTab() {
+			const [state, setState] = useState({ status: "loading", items: [], source: "" });
+			const [msg, setMsg] = useState("");
+			const [installing, setInstalling] = useState("");
+			const load = () => {
+				setState({ status: "loading", items: [], source: "" });
+				fetch("/dshwork/api/market", { headers: { accept: "application/json" } })
+					.then((r) => r.json())
+					.then((d) => {
+						if (d && d.ok) setState({ status: "ready", items: d.items || [], source: d.source || "" });
+						else setState({ status: "error", items: [], source: (d && d.source) || "", error: (d && d.error) || "" });
+					})
+					.catch((e) => setState({ status: "error", items: [], source: "", error: e.message }));
+			};
+			React.useEffect(load, []);
+			function install(name, version) {
+				setMsg("");
+				setInstalling(name);
+				fetch("/dshwork/api/market/install", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ name: name, version: version || undefined })
+				})
+					.then((r) => r.json())
+					.then((d) => {
+						setInstalling("");
+						if (d && d.ok) setMsg("已安装:" + name + ",重启 harness 后生效");
+						else setMsg("安装失败:" + ((d && d.error) || "未知错误"));
+					})
+					.catch((e) => { setInstalling(""); setMsg("安装失败:" + e.message); });
+			}
+			const body = state.status === "loading"
+				? React.createElement("div", { className: "dsw-hint" }, "读取市场中…")
+				: state.status === "error"
+					? React.createElement("div", { className: "dsw-hint" }, "读取市场失败:" + (state.error || "未知错误") + "(源可稍后配置)")
+					: state.items.length === 0
+						? React.createElement("div", { className: "dsw-hint" }, "市场为空(源:" + state.source + ")")
+						: state.items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+							React.createElement("div", { className: "dsw-item-main" },
+								React.createElement("b", null, it.name),
+								React.createElement("span", null, (it.description || "无描述") + (it.version ? " · v" + it.version : ""))),
+							React.createElement("button", {
+								type: "button",
+								className: "dsw-ref",
+								disabled: installing === it.name,
+								onClick: () => install(it.name, it.version)
+							}, installing === it.name ? "安装中…" : "安装")));
+			return React.createElement("div", null,
+				React.createElement("div", { className: "dsw-body" }, body),
+				React.createElement("div", { className: "dsw-foot" },
+					React.createElement("span", { className: "dsw-hint" }, msg || ("源:" + (state.source || "未配置")))));
+		}
+
+		function PluginsPanel({ onClose }) {
+			const [tab, setTab] = useState("installed");
+			const tabBtn = (id, label) => React.createElement("button", {
+				type: "button",
+				className: "dsw-tab" + (tab === id ? " on" : ""),
+				onClick: () => setTab(id)
+			}, label);
 			return React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 				React.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 					React.createElement("div", { className: "dsw-top" },
-						React.createElement("span", { className: "dsw-brand" }, "我的插件"),
+						React.createElement("span", { className: "dsw-brand" }, "插件"),
 						React.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\u00d7")),
-					React.createElement("div", { className: "dsw-body" },
-						items === null ? React.createElement("div", { className: "dsw-hint" }, "读取中…")
-							: items.length === 0 ? React.createElement("div", { className: "dsw-hint" }, "读取失败:host 接口未就绪(重启 harness 后可用)")
-							: items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
-								React.createElement("div", { className: "dsw-item-main" },
-									React.createElement("b", null, it.name),
-									React.createElement("span", null, it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开"))),
-								React.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) })))),
-					React.createElement("div", { className: "dsw-foot" },
-						React.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。"))));
+					React.createElement("div", { className: "dsw-tabs" },
+						tabBtn("installed", "已安装"),
+						tabBtn("market", "插件市场")),
+					tab === "installed" ? React.createElement(InstalledTab, null) : React.createElement(MarketTab, null)));
 		}
 
 		function Overlay() {
