@@ -322,6 +322,62 @@ async function ensureWorkbenchMounted(options = {}) {
   return { ok: false, mounted: false, reason: 'copy-incomplete', profileDir };
 }
 
+// ---------------------------------------------------------------------------
+// DSHwork 品牌/入口插件(随包内置):把它挂进 profile,定制 harness 界面
+// ---------------------------------------------------------------------------
+
+const BRAND_PLUGIN_NAME = '@dshwork/dsh-client-ui-dshwork-brand';
+
+/** 品牌插件所在目录:打包后 <resources>/plugins/...;开发态 ../../../plugins/... */
+function resolveBrandDir() {
+  if (process.env.DSHWORK_BRAND_DIR) return process.env.DSHWORK_BRAND_DIR;
+  const candidates = [];
+  if (process.resourcesPath) candidates.push(path.join(process.resourcesPath, 'plugins', 'dsh-client-ui-dshwork-brand'));
+  candidates.push(path.join(__dirname, '..', '..', '..', 'plugins', 'dsh-client-ui-dshwork-brand'));
+  for (const c of candidates) {
+    try {
+      if (c && fs.existsSync(path.join(c, 'package.json'))) return c;
+    } catch (_) {
+      /* 跳过 */
+    }
+  }
+  return null;
+}
+
+/**
+ * 把品牌插件装进 profile(node_modules + bundles)。幂等;无需 pnpm。
+ * @param {string} profileDir - profile 目录。
+ * @returns {{ok: boolean, reason?: string}}
+ */
+function ensureBrandMounted(profileDir) {
+  const brandDir = resolveBrandDir();
+  if (!brandDir) {
+    log('[profile-mount] brand plugin dir not found; skip');
+    return { ok: false, reason: 'no-brand-dir' };
+  }
+  try {
+    if (!fs.existsSync(path.join(profileDir, 'package.json'))) createProfile(profileDir, path.basename(profileDir));
+    const target = path.join(profileDir, 'node_modules', '@dshwork', 'dsh-client-ui-dshwork-brand');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.cpSync(brandDir, target, { recursive: true, filter: (s) => !s.includes(`${path.sep}node_modules`) });
+
+    const pkgPath = path.join(profileDir, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    pkg.dsh = pkg.dsh || {};
+    pkg.dsh.profile = pkg.dsh.profile || {};
+    if (!Array.isArray(pkg.dsh.profile.bundles)) pkg.dsh.profile.bundles = [];
+    if (!pkg.dsh.profile.bundles.includes(BRAND_PLUGIN_NAME)) pkg.dsh.profile.bundles.push(BRAND_PLUGIN_NAME);
+    pkg.dependencies = pkg.dependencies || {};
+    if (!pkg.dependencies[BRAND_PLUGIN_NAME]) pkg.dependencies[BRAND_PLUGIN_NAME] = 'link:' + toForwardSlashes(path.resolve(brandDir));
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+    return { ok: true };
+  } catch (err) {
+    log('[profile-mount] ensureBrandMounted failed:', err && err.message);
+    return { ok: false, reason: 'failed' };
+  }
+}
+
 /** 系统 node(on PATH),作为兜底 node。 */
 function findSystemNode() {
   const name = process.platform === 'win32' ? 'node.exe' : 'node';
@@ -342,6 +398,9 @@ module.exports = {
   resolveDshBin,
   resolvePluginDir,
   toForwardSlashes,
+  BRAND_PLUGIN_NAME,
+  resolveBrandDir,
+  ensureBrandMounted,
   mountState,
   createProfile,
   installByCopy,

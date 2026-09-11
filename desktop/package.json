@@ -40,6 +40,16 @@
         "from": "vendor",
         "to": "vendor",
         "filter": ["**/*"]
+      },
+      {
+        "from": "../plugins/dshwork-skills",
+        "to": "skills",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../plugins/dsh-client-ui-dshwork-brand",
+        "to": "plugins/dsh-client-ui-dshwork-brand",
+        "filter": ["**/*"]
       }
     ],
     "protocols": [

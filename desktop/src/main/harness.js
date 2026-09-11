@@ -26,8 +26,16 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { ensureNodeRuntime, findSystemNode } = require('./node-runtime');
-const { ensureWorkbenchMounted, removeWorkbenchMounted, profileDirFor, defaultProfileName, resolveDshBin } = require('./profile-mount');
+const {
+  ensureWorkbenchMounted,
+  removeWorkbenchMounted,
+  ensureBrandMounted,
+  profileDirFor,
+  defaultProfileName,
+  resolveDshBin
+} = require('./profile-mount');
 const { ensureDedicatedHome } = require('./dsh-home');
+const { installBundledSkills } = require('./skills');
 const { log } = require('./log');
 
 const HARNESS_URL = process.env.DSHWORK_HARNESS_URL || 'http://127.0.0.1:3080';
@@ -344,6 +352,13 @@ async function bootHarness(mode = 'bundled', options = {}) {
     dshBin = resolveDshBin() || null;
   }
 
+  // 随包内置技能:装进当前 harness home 的技能目录(缺失才复制)。
+  try {
+    installBundledSkills();
+  } catch (err) {
+    log('[skills] install skipped:', err && err.message);
+  }
+
   // 现阶段:默认使用「原生 harness」,不挂载 DSHwork 工作台插件。
   // 若之前挂载过,这里主动清掉,让页面回到原生 harness 界面。
   // (如需恢复工作台插件:设 DSHWORK_MOUNT_WORKBENCH=1)
@@ -370,6 +385,13 @@ async function bootHarness(mode = 'bundled', options = {}) {
       }
     }
     log('[profile-mount] native harness; workbench plugin unmounted:', removedAny ? 'yes' : 'nothing-to-remove');
+    // 随包内置的品牌/入口插件 -> 当前 profile(自定义 logo + 插件/技能入口 + 右上角)
+    try {
+      const r = ensureBrandMounted(profileDirFor(profileName));
+      log('[profile-mount] brand plugin mounted:', r && r.ok ? 'yes' : `no(${r && r.reason})`);
+    } catch (err) {
+      log('[profile-mount] brand mount skipped:', err && err.message);
+    }
   }
 
   // 捕获 harness 输出,用于提取其网页 auth token(dsh web 打印的 ?token=)。
