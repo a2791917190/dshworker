@@ -73,24 +73,41 @@ const template = `window.__ModuleLoader__.load({
 \t\t})();
 
 \t\t// ── DOM 层:替换 hero 文案 + 藏预览角标 ──
-\t\t// 注意:只藏「角标元素本身」,不要藏它的父元素 —— 父元素里通常同时包着标题,
-\t\t// 藏父元素会把标题一起藏掉(之前的 bug)。
+\t\t// 注意:只藏「角标元素本身」,绝不藏父元素(父元素里还包着标题)。
+\t\t// 同时:若标题的某个祖先曾被旧版误藏(display:none),这里负责恢复。
+\t\tlet patching = false;
+\t\tfunction revealChain(el) {
+\t\t\tlet p = el;
+\t\t\twhile (p && p !== document.body && p.style) {
+\t\t\t\tif (p.style.display === "none") p.style.display = "";
+\t\t\t\tp = p.parentElement;
+\t\t\t}
+\t\t}
 \t\tfunction patchHero() {
-\t\t\tif (typeof document === "undefined") return;
-\t\t\tconst els = document.querySelectorAll("span,div");
-\t\t\tfor (const el of els) {
-\t\t\t\tif (el.children.length !== 0) continue;
-\t\t\t\tconst txt = (el.textContent || "").trim();
-\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) {
-\t\t\t\t\tel.textContent = HERO_HEADLINE;
-\t\t\t\t} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
-\t\t\t\t\tel.style.display = "none";
+\t\t\tif (patching || typeof document === "undefined") return;
+\t\t\tpatching = true;
+\t\t\ttry {
+\t\t\t\tconst els = document.querySelectorAll("span,div,h1,p");
+\t\t\t\tfor (const el of els) {
+\t\t\t\t\tif (el.children.length !== 0) continue;
+\t\t\t\t\tconst txt = (el.textContent || "").trim();
+\t\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\t\trevealChain(el);
+\t\t\t\t\t\tel.textContent = HERO_HEADLINE;
+\t\t\t\t\t} else if (txt === HERO_HEADLINE) {
+\t\t\t\t\t\trevealChain(el);
+\t\t\t\t\t} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\t\tel.style.display = "none";
+\t\t\t\t\t}
 \t\t\t\t}
+\t\t\t} finally {
+\t\t\t\tpatching = false;
 \t\t\t}
 \t\t}
 \t\tif (typeof window !== "undefined" && typeof document !== "undefined") {
+\t\t\tpatchHero();
 \t\t\tlet n = 0;
-\t\t\tconst timer = setInterval(() => { patchHero(); if (++n > 400 && timer) clearInterval(timer); }, 800);
+\t\t\tconst timer = setInterval(() => { patchHero(); if (++n > 600 && timer) clearInterval(timer); }, 700);
 \t\t\ttry { new MutationObserver(() => patchHero()).observe(document.documentElement, { childList: true, subtree: true, characterData: true }); } catch (_) {}
 \t\t}
 

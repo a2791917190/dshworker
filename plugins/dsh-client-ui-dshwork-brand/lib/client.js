@@ -51,24 +51,41 @@ window.__ModuleLoader__.load({
 		})();
 
 		// ── DOM 层:替换 hero 文案 + 藏预览角标 ──
-		// 注意:只藏「角标元素本身」,不要藏它的父元素 —— 父元素里通常同时包着标题,
-		// 藏父元素会把标题一起藏掉(之前的 bug)。
+		// 注意:只藏「角标元素本身」,绝不藏父元素(父元素里还包着标题)。
+		// 同时:若标题的某个祖先曾被旧版误藏(display:none),这里负责恢复。
+		let patching = false;
+		function revealChain(el) {
+			let p = el;
+			while (p && p !== document.body && p.style) {
+				if (p.style.display === "none") p.style.display = "";
+				p = p.parentElement;
+			}
+		}
 		function patchHero() {
-			if (typeof document === "undefined") return;
-			const els = document.querySelectorAll("span,div");
-			for (const el of els) {
-				if (el.children.length !== 0) continue;
-				const txt = (el.textContent || "").trim();
-				if (HERO_OLD.indexOf(txt) !== -1) {
-					el.textContent = HERO_HEADLINE;
-				} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
-					el.style.display = "none";
+			if (patching || typeof document === "undefined") return;
+			patching = true;
+			try {
+				const els = document.querySelectorAll("span,div,h1,p");
+				for (const el of els) {
+					if (el.children.length !== 0) continue;
+					const txt = (el.textContent || "").trim();
+					if (HERO_OLD.indexOf(txt) !== -1) {
+						revealChain(el);
+						el.textContent = HERO_HEADLINE;
+					} else if (txt === HERO_HEADLINE) {
+						revealChain(el);
+					} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
+						el.style.display = "none";
+					}
 				}
+			} finally {
+				patching = false;
 			}
 		}
 		if (typeof window !== "undefined" && typeof document !== "undefined") {
+			patchHero();
 			let n = 0;
-			const timer = setInterval(() => { patchHero(); if (++n > 400 && timer) clearInterval(timer); }, 800);
+			const timer = setInterval(() => { patchHero(); if (++n > 600 && timer) clearInterval(timer); }, 700);
 			try { new MutationObserver(() => patchHero()).observe(document.documentElement, { childList: true, subtree: true, characterData: true }); } catch (_) {}
 		}
 
