@@ -1,0 +1,4 @@
+# dshwork brand bundle patch: inserts its public dsh.client entry into the web plugin roster.
+- insert:
+    - id: dshwork-brand
+      name: '@dshwork/dsh-client-ui-dshwork-brand'
