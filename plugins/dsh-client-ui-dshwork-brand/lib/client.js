@@ -38,6 +38,11 @@ window.__ModuleLoader__.load({
 				".dsw-item b{display:block;font-size:14px;color:#141414}",
 				".dsw-item-main span{font-size:12.5px;color:#7a7a7a}",
 				".dsw-badge{flex:none;font-size:12px;color:#1f9d55;background:rgba(31,157,85,.12);border-radius:999px;padding:3px 10px}",
+				".dsw-switch{position:relative;flex:none;width:38px;height:22px;border-radius:11px;border:none;background:rgba(0,0,0,.2);cursor:pointer;padding:0;transition:background .15s}",
+				".dsw-switch.on{background:#3b82f6}",
+				".dsw-switch.disabled{opacity:.45;cursor:default}",
+				".dsw-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}",
+				".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
 				".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
 				".dsw-ref:hover{background:rgba(0,0,0,.06)}",
 				".dsw-foot{display:flex;align-items:center;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
@@ -205,44 +210,88 @@ window.__ModuleLoader__.load({
 			return false;
 		}
 
-		function PanelItem({ item, kind, onClose }) {
-			const action = kind === "plugins"
-				? React.createElement("span", { className: "dsw-badge" }, "已启用")
-				: React.createElement("button", {
-					type: "button",
-					className: "dsw-ref",
-					title: "把该技能插入输入框",
-					onClick: () => { insertToComposer((item.cite || item.name) + " "); if (onClose) onClose(); }
-				}, "引用");
-			return React.createElement("div", { className: "dsw-item" },
-				React.createElement("div", { className: "dsw-item-main" },
-					React.createElement("b", null, item.name),
-					React.createElement("span", null, item.desc)),
-				action);
+		function Switch({ on, disabled, onToggle }) {
+			return React.createElement("button", {
+				type: "button",
+				className: "dsw-switch" + (on ? " on" : "") + (disabled ? " disabled" : ""),
+				role: "switch",
+				"aria-checked": on ? "true" : "false",
+				disabled: !!disabled,
+				title: disabled ? "内置插件,不可停用" : (on ? "已启用,点击停用" : "已停用,点击启用"),
+				onClick: (e) => { e.stopPropagation(); if (!disabled) onToggle(!on); }
+			}, React.createElement("span", { className: "dsw-knob" }));
 		}
 
-		function Panel({ title, items, kind, onClose }) {
+		// 技能面板
+		function SkillsPanel({ onClose }) {
 			return React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 				React.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 					React.createElement("div", { className: "dsw-top" },
-						React.createElement("span", { className: "dsw-brand" }, title),
+						React.createElement("span", { className: "dsw-brand" }, "技能"),
 						React.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\u00d7")),
 					React.createElement("div", { className: "dsw-body" },
-						items.map((it) => React.createElement(PanelItem, { key: it.name, item: it, kind: kind, onClose: onClose }))),
-					kind === "plugins" ? React.createElement("div", { className: "dsw-foot" },
-						React.createElement("span", { className: "dsw-hint" }, "harness 未开放插件启停接口,此处仅显示已启用的插件。")) : null));
+						SKILLS.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+							React.createElement("div", { className: "dsw-item-main" },
+								React.createElement("b", null, it.name),
+								React.createElement("span", null, it.desc)),
+							React.createElement("button", {
+								type: "button",
+								className: "dsw-ref",
+								title: "把该技能插入输入框",
+								onClick: () => { insertToComposer((it.cite || it.name) + " "); onClose(); }
+							}, "引用")))),
+					React.createElement("div", { className: "dsw-foot" },
+						React.createElement("span", { className: "dsw-hint" }, "点「引用」会把技能写进输入框。"))));
+		}
+
+		// 插件面板:走 host 的真实接口
+		function PluginsPanel({ onClose }) {
+			const [items, setItems] = useState(null);
+			const [msg, setMsg] = useState("");
+			const load = () => {
+				fetch("/dshwork/api/plugins", { headers: { accept: "application/json" } })
+					.then((r) => r.json())
+					.then((d) => setItems(d && d.ok && Array.isArray(d.plugins) ? d.plugins : []))
+					.catch(() => setItems([]));
+			};
+			React.useEffect(load, []);
+			function toggle(name, next) {
+				setMsg("");
+				fetch("/dshwork/api/plugins", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ name: name, enabled: next })
+				})
+					.then((r) => r.json())
+					.then((d) => {
+						if (d && d.ok) { setMsg("已保存:" + name + (next ? " 已启用" : " 已停用") + ",重启后生效"); load(); }
+						else setMsg("失败:" + ((d && d.error) || "未知错误"));
+					})
+					.catch((e) => setMsg("失败:" + e.message));
+			}
+			return React.createElement("div", { className: "dsw-overlay", onClick: onClose },
+				React.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
+					React.createElement("div", { className: "dsw-top" },
+						React.createElement("span", { className: "dsw-brand" }, "我的插件"),
+						React.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\u00d7")),
+					React.createElement("div", { className: "dsw-body" },
+						items === null ? React.createElement("div", { className: "dsw-hint" }, "读取中…")
+							: items.length === 0 ? React.createElement("div", { className: "dsw-hint" }, "读取失败:host 接口未就绪(重启 harness 后可用)")
+							: items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+								React.createElement("div", { className: "dsw-item-main" },
+									React.createElement("b", null, it.name),
+									React.createElement("span", null, it.pinned ? "内置,不可停用" : "来自 profile 插件名单")),
+								React.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) })))),
+					React.createElement("div", { className: "dsw-foot" },
+						React.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。"))));
 		}
 
 		function Overlay() {
 			const page = useSyncExternalStore(store.subscribe, store.getSnapshot);
 			if (!page) return null;
-			const isPlugins = page === "plugins";
-			return React.createElement(Panel, {
-				title: isPlugins ? "我的插件" : "技能",
-				items: isPlugins ? PLUGINS : SKILLS,
-				kind: isPlugins ? "plugins" : "skills",
-				onClose: store.close
-			});
+			return page === "plugins"
+				? React.createElement(PluginsPanel, { onClose: store.close })
+				: React.createElement(SkillsPanel, { onClose: store.close });
 		}
 
 		function FooterAction() {

@@ -60,6 +60,11 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t".dsw-item b{display:block;font-size:14px;color:#141414}",
 \t\t\t\t".dsw-item-main span{font-size:12.5px;color:#7a7a7a}",
 \t\t\t\t".dsw-badge{flex:none;font-size:12px;color:#1f9d55;background:rgba(31,157,85,.12);border-radius:999px;padding:3px 10px}",
+\t\t\t\t".dsw-switch{position:relative;flex:none;width:38px;height:22px;border-radius:11px;border:none;background:rgba(0,0,0,.2);cursor:pointer;padding:0;transition:background .15s}",
+\t\t\t\t".dsw-switch.on{background:#3b82f6}",
+\t\t\t\t".dsw-switch.disabled{opacity:.45;cursor:default}",
+\t\t\t\t".dsw-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}",
+\t\t\t\t".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
 \t\t\t\t".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
 \t\t\t\t".dsw-ref:hover{background:rgba(0,0,0,.06)}",
 \t\t\t\t".dsw-foot{display:flex;align-items:center;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
@@ -227,44 +232,88 @@ const template = `window.__ModuleLoader__.load({
 \t\t\treturn false;
 \t\t}
 
-\t\tfunction PanelItem({ item, kind, onClose }) {
-\t\t\tconst action = kind === "plugins"
-\t\t\t\t? React.createElement("span", { className: "dsw-badge" }, "已启用")
-\t\t\t\t: React.createElement("button", {
-\t\t\t\t\ttype: "button",
-\t\t\t\t\tclassName: "dsw-ref",
-\t\t\t\t\ttitle: "把该技能插入输入框",
-\t\t\t\t\tonClick: () => { insertToComposer((item.cite || item.name) + " "); if (onClose) onClose(); }
-\t\t\t\t}, "引用");
-\t\t\treturn React.createElement("div", { className: "dsw-item" },
-\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
-\t\t\t\t\tReact.createElement("b", null, item.name),
-\t\t\t\t\tReact.createElement("span", null, item.desc)),
-\t\t\t\taction);
+\t\tfunction Switch({ on, disabled, onToggle }) {
+\t\t\treturn React.createElement("button", {
+\t\t\t\ttype: "button",
+\t\t\t\tclassName: "dsw-switch" + (on ? " on" : "") + (disabled ? " disabled" : ""),
+\t\t\t\trole: "switch",
+\t\t\t\t"aria-checked": on ? "true" : "false",
+\t\t\t\tdisabled: !!disabled,
+\t\t\t\ttitle: disabled ? "内置插件,不可停用" : (on ? "已启用,点击停用" : "已停用,点击启用"),
+\t\t\t\tonClick: (e) => { e.stopPropagation(); if (!disabled) onToggle(!on); }
+\t\t\t}, React.createElement("span", { className: "dsw-knob" }));
 \t\t}
 
-\t\tfunction Panel({ title, items, kind, onClose }) {
+\t\t// 技能面板
+\t\tfunction SkillsPanel({ onClose }) {
 \t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
 \t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
 \t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
-\t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, title),
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, "技能"),
 \t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\\u00d7")),
 \t\t\t\t\tReact.createElement("div", { className: "dsw-body" },
-\t\t\t\t\t\titems.map((it) => React.createElement(PanelItem, { key: it.name, item: it, kind: kind, onClose: onClose }))),
-\t\t\t\t\tkind === "plugins" ? React.createElement("div", { className: "dsw-foot" },
-\t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, "harness 未开放插件启停接口,此处仅显示已启用的插件。")) : null));
+\t\t\t\t\t\tSKILLS.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
+\t\t\t\t\t\t\t\tReact.createElement("span", null, it.desc)),
+\t\t\t\t\t\t\tReact.createElement("button", {
+\t\t\t\t\t\t\t\ttype: "button",
+\t\t\t\t\t\t\t\tclassName: "dsw-ref",
+\t\t\t\t\t\t\t\ttitle: "把该技能插入输入框",
+\t\t\t\t\t\t\t\tonClick: () => { insertToComposer((it.cite || it.name) + " "); onClose(); }
+\t\t\t\t\t\t\t}, "引用")))),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, "点「引用」会把技能写进输入框。"))));
+\t\t}
+
+\t\t// 插件面板:走 host 的真实接口
+\t\tfunction PluginsPanel({ onClose }) {
+\t\t\tconst [items, setItems] = useState(null);
+\t\t\tconst [msg, setMsg] = useState("");
+\t\t\tconst load = () => {
+\t\t\t\tfetch("/dshwork/api/plugins", { headers: { accept: "application/json" } })
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => setItems(d && d.ok && Array.isArray(d.plugins) ? d.plugins : []))
+\t\t\t\t\t.catch(() => setItems([]));
+\t\t\t};
+\t\t\tReact.useEffect(load, []);
+\t\t\tfunction toggle(name, next) {
+\t\t\t\tsetMsg("");
+\t\t\t\tfetch("/dshwork/api/plugins", {
+\t\t\t\t\tmethod: "POST",
+\t\t\t\t\theaders: { "content-type": "application/json" },
+\t\t\t\t\tbody: JSON.stringify({ name: name, enabled: next })
+\t\t\t\t})
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => {
+\t\t\t\t\t\tif (d && d.ok) { setMsg("已保存:" + name + (next ? " 已启用" : " 已停用") + ",重启后生效"); load(); }
+\t\t\t\t\t\telse setMsg("失败:" + ((d && d.error) || "未知错误"));
+\t\t\t\t\t})
+\t\t\t\t\t.catch((e) => setMsg("失败:" + e.message));
+\t\t\t}
+\t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
+\t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
+\t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, "我的插件"),
+\t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\\u00d7")),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-body" },
+\t\t\t\t\t\titems === null ? React.createElement("div", { className: "dsw-hint" }, "读取中…")
+\t\t\t\t\t\t\t: items.length === 0 ? React.createElement("div", { className: "dsw-hint" }, "读取失败:host 接口未就绪(重启 harness 后可用)")
+\t\t\t\t\t\t\t: items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+\t\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
+\t\t\t\t\t\t\t\t\tReact.createElement("span", null, it.pinned ? "内置,不可停用" : "来自 profile 插件名单")),
+\t\t\t\t\t\t\t\tReact.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) })))),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。"))));
 \t\t}
 
 \t\tfunction Overlay() {
 \t\t\tconst page = useSyncExternalStore(store.subscribe, store.getSnapshot);
 \t\t\tif (!page) return null;
-\t\t\tconst isPlugins = page === "plugins";
-\t\t\treturn React.createElement(Panel, {
-\t\t\t\ttitle: isPlugins ? "我的插件" : "技能",
-\t\t\t\titems: isPlugins ? PLUGINS : SKILLS,
-\t\t\t\tkind: isPlugins ? "plugins" : "skills",
-\t\t\t\tonClose: store.close
-\t\t\t});
+\t\t\treturn page === "plugins"
+\t\t\t\t? React.createElement(PluginsPanel, { onClose: store.close })
+\t\t\t\t: React.createElement(SkillsPanel, { onClose: store.close });
 \t\t}
 
 \t\tfunction FooterAction() {
