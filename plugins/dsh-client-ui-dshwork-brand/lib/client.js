@@ -126,7 +126,8 @@ window.__ModuleLoader__.load({
 
 		// ── 组件 ──
 		function BrandMark({ size }) {
-			const s = size || 24;
+			// harness 给的 size(首页约 34)偏小,这里放大 ~1.8 倍,竖排居中时更醒目。
+			const s = Math.round((size || 34) * 1.8);
 			return React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", style: { objectFit: "contain", display: "block" } });
 		}
 

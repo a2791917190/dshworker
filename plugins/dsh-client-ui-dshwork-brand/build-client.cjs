@@ -148,7 +148,8 @@ const template = `window.__ModuleLoader__.load({
 
 \t\t// ── 组件 ──
 \t\tfunction BrandMark({ size }) {
-\t\t\tconst s = size || 24;
+\t\t\t// harness 给的 size(首页约 34)偏小,这里放大 ~1.8 倍,竖排居中时更醒目。
+\t\t\tconst s = Math.round((size || 34) * 1.8);
 \t\t\treturn React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", style: { objectFit: "contain", display: "block" } });
 \t\t}
 
