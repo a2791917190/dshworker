@@ -15,6 +15,7 @@ const path = require('path');
 const { registerProtocol } = require('./protocol');
 const { createTray } = require('./tray');
 const { promptHarnessUpdate, setupUpdater } = require('./updater');
+const { log } = require('./log');
 const {
   bootHarness,
   resolveHarnessVersion,
@@ -50,6 +51,8 @@ if (!gotSingleInstanceLock) {
 
 async function onReady() {
   registerProtocol(DEEP_LINK_SCHEME, dispatchDeepLink);
+  // 醒目的构建标记:用于确认「跑的是不是最新构建」。
+  log('[dshwork] ===== BOOT build=2026-09-11-native-harness (no-workbench-plugin) =====');
 
   // 内置 harness 作为「保底」时用的私有数据目录基址(避免与用户已有 harness 的
   // Junction/profile 冲突)。默认取 Electron userData。bootHarness 仅在「没有可用

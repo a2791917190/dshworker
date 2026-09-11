@@ -60,6 +60,31 @@ function getHarnessToken() {
   return harnessToken;
 }
 
+/**
+ * 从 `$DSH_HOME/launchers/web-url.txt` 读取 harness 的带 token URL。
+ * harness(dsh-desktop 启动器)会把 `http://127.0.0.1:3080/?token=...` 写在这里;
+ * 客户端「复用已在跑的 harness」时,靠这个文件拿到 token(否则网页会 auth 拦截/黑屏)。
+ */
+function readHarnessUrlToken() {
+  const bases = [];
+  if (process.env.DSH_HOME) bases.push(process.env.DSH_HOME);
+  bases.push(path.join(os.homedir(), '.dsh'));
+  for (const base of bases) {
+    try {
+      const p = path.join(base, 'launchers', 'web-url.txt');
+      if (!fs.existsSync(p)) continue;
+      const content = fs.readFileSync(p, 'utf8');
+      // 只认当前 harness 地址(host:port 匹配)那条,避免用到过期 token
+      if (!content.includes(HARNESS_URL)) continue;
+      const t = extractToken(content);
+      if (t) return t;
+    } catch (_) {
+      /* 跳过不可读的候选 */
+    }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // 远程版本检查
 // ---------------------------------------------------------------------------
@@ -286,7 +311,12 @@ function findInstalledDsh() {
  * @param {string} [mode] 'bundled'(默认)| 'npx'
  */
 async function bootHarness(mode = 'bundled', options = {}) {
-  if (await isUp(HARNESS_URL)) return true;
+  if (await isUp(HARNESS_URL)) {
+    // 复用已在跑的 harness:它没打印到我们的 stdout,从 launchers/web-url.txt 拿 token。
+    harnessToken = harnessToken || readHarnessUrlToken();
+    log('[harness] reusing running harness; token:', harnessToken ? 'yes' : 'no');
+    return true;
+  }
 
   // 解析出可用的 node 运行时(内置/缓存/系统/自动下载),没有则无法拉起 Harness。
   const runtime = await ensureNodeRuntime({ onProgress: options.onNodeProgress });
@@ -393,7 +423,7 @@ async function bootHarness(mode = 'bundled', options = {}) {
   }
 
   // 从 harness 输出提取 auth token,窗口打开网页时带上(否则被 auth fence 拦截)。
-  harnessToken = extractToken(harnessOutput);
+  harnessToken = extractToken(harnessOutput) || readHarnessUrlToken();
   if (harnessToken) log('[harness] captured harness auth token (len=' + harnessToken.length + ')');
   return up;
 }
@@ -498,6 +528,7 @@ module.exports = {
   getHarnessUrl,
   getHarnessToken,
   extractToken,
+  readHarnessUrlToken,
   compareVersions,
   isNewerVersion,
   isUp,

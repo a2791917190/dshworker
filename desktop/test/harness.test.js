@@ -15,6 +15,7 @@ const {
   extractToken,
   getHarnessUrl,
   getHarnessToken,
+  readHarnessUrlToken,
   BUNDLED_HARNESS_VERSION
 } = require('../src/main/harness');
 
@@ -78,6 +79,25 @@ async function main() {
     // 这里仅验证 extractToken 产出非空,getHarnessUrl 无 token 时原样返回。
     assert.ok(typeof t === 'string' && t.length > 0);
     assert.strictEqual(getHarnessUrl(), 'http://127.0.0.1:3080');
+  });
+  await ok('readHarnessUrlToken reads token from launchers/web-url.txt', () => {
+    const os = require('os');
+    const fs = require('fs');
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'dshwork-urltoken-'));
+    try {
+      fs.mkdirSync(path.join(home, 'launchers'), { recursive: true });
+      fs.writeFileSync(path.join(home, 'launchers', 'web-url.txt'), 'http://127.0.0.1:3080/?token=Tok_123-abc\n', 'utf8');
+      const prev = process.env.DSH_HOME;
+      process.env.DSH_HOME = home;
+      try {
+        assert.strictEqual(readHarnessUrlToken(), 'Tok_123-abc');
+      } finally {
+        if (prev === undefined) delete process.env.DSH_HOME;
+        else process.env.DSH_HOME = prev;
+      }
+    } finally {
+      fs.rmSync(home, { recursive: true, force: true });
+    }
   });
 
   // ---- resolveHarnessVersion ----
