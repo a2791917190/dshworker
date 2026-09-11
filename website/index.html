@@ -1,309 +1,1148 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="no-js" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DSHwork · 解放你的生产力 —— 零命令、开箱即用的 AI 工作台</title>
-  <meta name="description" content="DSHwork.ai —— 给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用:打开它,你是用 AI 把活干完,而不是折腾开发者工具。由深求社区 DeepSeek.club 出品的独立社区项目,非 DeepSeek 官方产品。" />
-  <meta name="keywords" content="DSHwork,DeepSeek Harness,Agent 工作台,AI 工作台,AI 生产力工具,生产力,研究报告,资料调研,文献整理,长文起草" />
-  <meta property="og:title" content="DSHwork · 解放你的生产力 —— 零命令、开箱即用的 AI 工作台" />
-  <meta property="og:description" content="给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用,用 AI 把活干完。由 DeepSeek.club 社区出品。" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://dshwork.ai/" />
-  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "DSHwork",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Windows, macOS",
-    "description": "DSHwork.ai —— 给「不太懂代码的知识工作者」的 DeepSeek Agent 工作台。零命令、开箱即用,用 AI 把活干完。由 DeepSeek.club 出品的独立社区项目。",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
-    "url": "https://dshwork.ai/",
-    "downloadUrl": "https://dshwork.ai/#download"
-  }
-  </script>
+<meta charset="UTF-8" />
+<script>document.documentElement.classList.replace('no-js','js');try{var t=localStorage.getItem('dsh-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DSH Work — DeepSeek Harness 桌面工作客户端</title>
+<meta name="description" content="让 DSH Work 帮你完成工作任务。DSH Work 是 DeepSeek Harness 的桌面工作客户端，支持 Windows 与 macOS，无需命令行，下载安装即用。" />
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/700.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/500.css" />
+
+<style>
+/* ============================================================
+   DSH WORK — Desktop client for DeepSeek Harness
+   Light · minimal · DeepSeek blue
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #f7f8fb;
+  --bg-tint: #f2f4ff;
+  --ink: #0e1319;
+  --ink-2: #57606f;
+  --ink-3: #8b93a2;
+  --line: #e8eaef;
+  --line-strong: #d8dce5;
+  --brand: #4d6bfe;
+  --brand-600: #3a55e8;
+  --brand-700: #2c43c7;
+  --brand-soft: #eef1ff;
+  --brand-tint: #e3e9ff;
+  --green: #22c55e;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-xs: 0 1px 2px rgba(14, 19, 25, 0.05);
+  --shadow-sm: 0 4px 16px -6px rgba(14, 19, 25, 0.10);
+  --shadow: 0 18px 44px -22px rgba(23, 34, 90, 0.28);
+  --shadow-lg: 0 40px 90px -40px rgba(23, 34, 90, 0.42);
+  --font-display: "Montserrat", "DM Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font: "DM Sans", system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --nav-h: 64px;
+  --maxw: 1100px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 24px); }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--brand-tint); color: var(--brand-700); }
+
+/* content width follows the design spec: 1140px with 24px gutters,
+   1140px with 72px gutters from 768px, 1280px from 1560px */
+.container { width: 100%; max-width: min(calc(100% - 48px), 1140px); margin: 0 auto; }
+@media (min-width: 768px) { .container { max-width: min(calc(100% - 144px), 1140px); } }
+@media (min-width: 1560px) { .container { max-width: 1280px; } }
+
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.25; letter-spacing: -0.012em; color: var(--ink); }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  padding: 12px 22px; border-radius: 10px; border: 1px solid transparent;
+  cursor: pointer; white-space: nowrap;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--brand); color: #fff; box-shadow: 0 6px 18px -8px rgba(77, 107, 254, .7); }
+.btn-primary:hover { background: var(--brand-600); box-shadow: 0 10px 24px -8px rgba(77, 107, 254, .75); transform: translateY(-1px); }
+.btn-ghost { background: #fff; color: var(--ink); border-color: var(--line-strong); box-shadow: var(--shadow-xs); }
+.btn-ghost:hover { border-color: var(--brand); color: var(--brand-600); transform: translateY(-1px); }
+.btn-sm { padding: 8px 15px; font-size: 14px; }
+
+/* download buttons (hero + section) */
+.dl-btn {
+  display: inline-flex; align-items: center; gap: 11px;
+  background: #fff; border: 1px solid var(--line-strong); border-radius: 12px;
+  padding: 14px 24px; font-size: 15.5px; font-weight: 600; color: var(--ink);
+  box-shadow: var(--shadow-xs);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease, color .18s ease;
+}
+.dl-btn:hover { border-color: var(--brand); color: var(--brand-600); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.dl-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dl-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 8px 22px -10px rgba(77,107,254,.8); }
+.dl-btn.primary:hover { background: var(--brand-600); border-color: var(--brand-600); color: #fff; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 60;
+  display: flex; align-items: center;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.nav.scrolled { border-bottom-color: var(--line); box-shadow: 0 1px 20px -12px rgba(14,19,25,.3); }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; }
+.brand { display: flex; align-items: center; }
+.brand-logo { display: block; height: 24px; width: auto; }
+/* optical alignment: the wordmark's ink mass sits ~2px low, and nav text sits ~2px high */
+.nav .brand-logo { transform: translateY(-2px); }
+.nav-links { display: flex; align-items: center; gap: 2px; }
+.nav-links a { font-size: 14.5px; font-weight: 500; color: var(--ink-2); padding: 8px 13px; border-radius: 8px; transition: color .16s ease, background .16s ease; }
+.nav-links a:hover { color: var(--ink); background: var(--bg-soft); }
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+.lang-switch { display: inline-flex; align-items: center; gap: 2px; background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; padding: 3px; }
+.lang-opt { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink-3); background: none; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background .16s ease, color .16s ease; }
+.lang-opt:hover { color: var(--ink); }
+.lang-opt.on { background: var(--brand-soft); color: var(--brand-700); }
+.theme-toggle { width: 38px; height: 32px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; color: var(--ink-2); cursor: pointer; transition: color .16s ease, border-color .16s ease; }
+.theme-toggle:hover { color: var(--brand-600); border-color: var(--brand); }
+.theme-toggle svg { width: 16px; height: 16px; }
+.theme-toggle .ico-sun { display: none; }
+.theme-toggle.is-dark .ico-sun,
+html[data-theme="dark"] .theme-toggle .ico-sun { display: block; }
+.theme-toggle.is-dark .ico-moon,
+html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
+.nav-toggle { display: none; width: 36px; height: 36px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; cursor: pointer; position: relative; }
+.nav-toggle span, .nav-toggle span::before, .nav-toggle span::after { content: ""; position: absolute; left: 9px; right: 9px; height: 1.8px; background: var(--ink); border-radius: 2px; }
+.nav-toggle span { top: 17px; transition: background .2s ease; }
+.nav-toggle span::before { top: -5px; transition: transform .2s ease; }
+.nav-toggle span::after { top: 5px; transition: transform .2s ease; }
+.nav-toggle.open span { background: transparent; }
+.nav-toggle.open span::before { transform: translateY(5px) rotate(45deg); }
+.nav-toggle.open span::after { transform: translateY(-5px) rotate(-45deg); }
+.mobile-menu { display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 59; background: #fff; border-bottom: 1px solid var(--line); padding: 10px 24px 18px; flex-direction: column; box-shadow: var(--shadow-sm); }
+.mobile-menu.open { display: flex; }
+.mobile-menu a { font-size: 15.5px; font-weight: 500; padding: 12px 4px; border-bottom: 1px solid var(--line); color: var(--ink); }
+
+/* ---------- hero · generous vertical breathing room ---------- */
+.hero { padding: calc(var(--nav-h) + 128px) 0 124px; position: relative; overflow: hidden; }
+@media (min-width: 1200px) { .hero { padding: calc(var(--nav-h) + 156px) 0 148px; } }
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -3;
+  background:
+    radial-gradient(58% 44% at 50% -8%, rgba(77, 107, 254, 0.16), transparent 70%),
+    radial-gradient(38% 30% at 88% 4%, rgba(122, 162, 255, 0.14), transparent 70%),
+    radial-gradient(34% 28% at 10% 8%, rgba(150, 200, 255, 0.12), transparent 70%),
+    linear-gradient(180deg, #f3f7ff 0%, #fafcff 48%, #ffffff 74%);
+}
+/* fine technical grid, fading out from the top — fills the empty space with texture */
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -2;
+  background-image:
+    linear-gradient(rgba(77, 107, 254, 0.085) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77, 107, 254, 0.085) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(82% 72% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 52%, transparent 88%);
+  -webkit-mask-image: radial-gradient(82% 72% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 52%, transparent 88%);
+}
+.hero-inner { text-align: center; max-width: 840px; margin: 0 auto; }
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 9px;
+  max-width: 100%;
+  font-size: 15px; font-weight: 500; color: var(--ink-2);
+  background: linear-gradient(180deg, #f8f9ff, #eef1ff);
+  border: 1px solid rgba(77, 107, 254, 0.14);
+  border-radius: 10px;
+  padding: 7px 16px;
+  margin-bottom: 36px;
+  box-shadow: 0 1px 2px rgba(23, 34, 90, 0.04);
+}
+.hero-kicker::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand); flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(77, 107, 254, 0.12);
+}
+.hero h1 { font-size: clamp(30px, 4.4vw, 46px); letter-spacing: -0.02em; line-break: strict; }
+
+/* ---------- hero entrance · A. mask reveal ---------- */
+.h1-mask { overflow: hidden; margin-bottom: 34px; }
+.js .h1-mask.reveal { opacity: 1; transform: none; }
+.js .h1-mask h1 { transform: translateY(106%); transition: transform .95s cubic-bezier(.16,.8,.3,1); }
+.js .h1-mask.in h1 { transform: translateY(0); }
+
+/* ---------- hero entrance · E. CTA sheen ---------- */
+.dl-btn.primary { position: relative; overflow: hidden; }
+.dl-btn.primary::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 55%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.42), transparent); transform: translateX(-180%); pointer-events: none; }
+.js .hero-dl.in .dl-btn.primary::after { animation: ctaSheen 1s cubic-bezier(.3,.7,.4,1) 1.05s 1 both; }
+@keyframes ctaSheen { 0% { transform: translateX(-180%); } 100% { transform: translateX(300%); } }
+.hero h1 .hl { color: var(--brand); white-space: nowrap; }
+.hero h1 .nb { white-space: nowrap; }
+.hero-sub { font-size: 16px; color: var(--ink-2); max-width: 620px; margin: 0 auto 48px; }
+.hero-dl { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+.hero-note { font-size: 13.5px; color: var(--ink-3); }
+
+/* ---------- app screenshot (screen 2) ---------- */
+.showcase { padding: 48px 0 0; }
+.shot { margin: 0 auto; max-width: 1040px; }
+.shot img { display: block; width: 100%; height: auto; border-radius: var(--radius-lg); border: 1px solid var(--line-strong); box-shadow: var(--shadow-lg); background: var(--bg-soft); }
+
+/* ---------- idle motion (keeps the top area alive while static) ---------- */
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes glowBreathe { 0%, 100% { opacity: .45; transform: scale(.97); } 50% { opacity: .95; transform: scale(1.04); } }
+@keyframes heroDrift { 0%, 100% { transform: scale(1) translate3d(0, 0, 0); } 50% { transform: scale(1.05) translate3d(-1.5%, 1%, 0); } }
+
+.js .hero::before { animation: heroDrift 26s ease-in-out infinite; }
+
+/* ---------- water-ripple ambience ---------- */
+.ripples { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ripples span {
+  position: absolute; left: 50%; top: 32%;
+  width: 320px; height: 320px; margin: -160px 0 0 -160px;
+  border-radius: 50%; border: 1px solid rgba(77, 107, 254, 0.38);
+  opacity: 0;
+  animation: ripple 12s cubic-bezier(.15, .6, .3, 1) infinite;
+}
+.ripples span:nth-child(2) { animation-delay: 4s; }
+.ripples span:nth-child(3) { animation-delay: 8s; }
+@keyframes ripple {
+  0% { transform: scale(.22); opacity: 0; }
+  8% { opacity: .7; }
+  100% { transform: scale(3.6); opacity: 0; }
+}
+.shot { position: relative; isolation: isolate; }
+.shot::before {
+  content: ""; position: absolute; inset: 12% 8% -6%; z-index: -1;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(77, 107, 254, 0.22), transparent 70%);
+  filter: blur(36px);
+  animation: glowBreathe 7s ease-in-out infinite;
+}
+.js .shot img { animation: floaty 7s ease-in-out infinite; }
+
+/* ---------- sections · spacing tiers 88 / 128 / 184px ---------- */
+.section { padding: 128px 0 0; }
+.section.pb { padding-bottom: 96px; }
+@media (min-width: 1200px) { .section { padding: 184px 0 0; } }
+
+/* ---------- full-bleed colour bands ---------- */
+.band { position: relative; padding-top: 96px; padding-bottom: 96px; }
+.band::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); z-index: -1; background: var(--band-bg, transparent); }
+.band + .section { padding-top: 96px; }
+.band-tint { --band-bg: linear-gradient(180deg, #f6f9ff, #edf2ff); }
+.band-gray { --band-bg: #f7f8fb; }
+/* closing band: near-black with an ice-blue aurora and a hint of warm gold */
+.band-dark {
+  --band-bg:
+    radial-gradient(78% 62% at 50% -14%, rgba(83, 141, 202, 0.30), transparent 66%),
+    radial-gradient(46% 46% at 84% 112%, rgba(238, 216, 170, 0.10), transparent 72%),
+    linear-gradient(180deg, #0d1118 0%, #0a0a0a 64%);
+  padding-top: 104px;
+  padding-bottom: 152px;
+}
+.band-dark .sec-title { color: #ffffff; }
+.band-dark .sec-sub { color: rgba(255, 255, 255, 0.78); }
+.band-dark .eyebrow { color: #6799fe; }
+.band-dark .eyebrow i { color: rgba(255, 255, 255, 0.42); }
+.band-dark .eyebrow i::before { color: rgba(255, 255, 255, 0.22); }
+.band-dark .oss-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.band-dark .oss-star { color: #ffffff; }
+.band-dark .btn-ghost { background: rgba(255, 255, 255, 0.06); color: #ffffff; border-color: rgba(255, 255, 255, 0.20); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.band-dark .btn-ghost:hover { background: rgba(255, 255, 255, 0.20); border-color: rgba(255, 255, 255, 0.60); color: #ffffff; }
+.band .card { box-shadow: var(--shadow-sm); }
+
+/* ---------- plugin ecosystem ---------- */
+.plug-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.pp-eyebrow { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--brand); margin-bottom: 14px; }
+.plug-desc { color: var(--ink-2); font-size: 16px; margin-top: 14px; max-width: 44ch; text-wrap: balance; }
+.plug-points { list-style: none; margin: 24px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.plug-points li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--ink-2); }
+.plug-points li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); margin-top: 9px; flex-shrink: 0; }
+.plug-mock { background: #ffffff; border: 1px solid var(--line-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+.pm-bar { display: flex; align-items: center; gap: 6px; padding: 13px 16px; border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+.pm-dot { width: 10px; height: 10px; border-radius: 50%; background: #dfe3ea; }
+.pm-dot:first-child { background: #ffbdb6; }
+.pm-dot:nth-child(2) { background: #ffe0a3; }
+.pm-dot:nth-child(3) { background: #b7ecc4; }
+.pm-title { margin-left: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+.pm-rows { padding: 6px 0; }
+.pm-row { display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+.pm-row:last-child { border-bottom: none; }
+.pm-ico { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand); }
+.pm-ico svg { width: 17px; height: 17px; }
+.pm-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.pm-kind { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); background: var(--bg-soft); border-radius: 5px; padding: 2px 7px; }
+.pm-sw { margin-left: auto; width: 34px; height: 20px; border-radius: 999px; background: var(--line-strong); position: relative; flex-shrink: 0; }
+.pm-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform .2s ease; }
+.pm-sw.on { background: var(--brand); }
+.pm-sw.on::after { transform: translateX(14px); }
+.fh-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.fh-chips span { font-family: var(--mono); font-size: 12.5px; color: var(--brand-700); background: var(--brand-soft); border: 1px solid var(--brand-tint); border-radius: 999px; padding: 5px 13px; }
+
+/* FAQ turns into cards on the grey band */
+.band-gray .faq-list { border-top: none; }
+.band-gray .faq-item { background: #ffffff; border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 14px; }
+.band-gray .faq-item:last-child { margin-bottom: 0; }
+.band-gray .faq-q { padding: 24px 20px; }
+.band-gray .faq-a p { padding: 0 20px 24px; }
+.sec-head { text-align: center; max-width: 720px; margin: 0 auto 72px; }
+.eyebrow { display: inline-block; font-family: var(--mono); font-size: 15px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: var(--brand); margin-bottom: 18px; }
+/* bilingual accent: English label only in the Chinese UI */
+.eyebrow i { font-style: normal; font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); margin-left: 10px; display: none; }
+.eyebrow i::before { content: "·"; margin-right: 9px; color: var(--line-strong); }
+html[lang="zh-CN"] .eyebrow i { display: inline; }
+.sec-title { font-size: clamp(26px, 3.2vw, 36px); letter-spacing: -0.018em; }
+.sec-sub { color: var(--ink-2); font-size: 16px; margin-top: 14px; text-wrap: balance; }
+/* avoid orphan characters at the end of short paragraphs */
+.card p, .step p, .faq-a p, .feature-highlight p, .fc-note, .footer-disclaimer { text-wrap: balance; }
+
+/* ---------- cards ---------- */
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.cards.three { grid-template-columns: repeat(3, 1fr); }
+.card { background: linear-gradient(180deg, #ffffff, #fbfcff); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 22px; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.card:hover { border-color: var(--brand-tint); box-shadow: var(--shadow); transform: translateY(-3px); }
+.card .c-ico { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand); margin-bottom: 16px; }
+.card .c-ico svg { width: 20px; height: 20px; }
+.card h3 { font-size: 17px; margin-bottom: 8px; }
+.card p { color: var(--ink-2); font-size: 14.5px; }
+
+/* ---------- steps ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.step { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 22px; }
+.step .s-num { font-family: var(--mono); font-size: 12px; color: var(--brand); font-weight: 500; margin-bottom: 12px; display: block; }
+.step h3 { font-size: 17px; margin-bottom: 7px; }
+.step p { color: var(--ink-2); font-size: 14.5px; }
+
+/* ---------- faq ---------- */
+.faq-list { max-width: 760px; margin: 0 auto; border-top: 1px solid var(--line); }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 18px; background: none; border: none; cursor: pointer; padding: 20px 4px; text-align: left; font-family: var(--font); font-size: 16.5px; font-weight: 700; color: var(--ink); }
+.faq-q .plus { width: 20px; height: 20px; position: relative; flex-shrink: 0; }
+.faq-q .plus::before, .faq-q .plus::after { content: ""; position: absolute; top: 50%; left: 50%; background: var(--brand); transition: transform .25s ease; }
+.faq-q .plus::before { width: 12px; height: 1.8px; transform: translate(-50%, -50%); }
+.faq-q .plus::after { width: 1.8px; height: 12px; transform: translate(-50%, -50%); }
+.faq-item.open .plus::after { transform: translate(-50%, -50%) rotate(90deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.faq-a p { padding: 0 4px 20px; color: var(--ink-2); font-size: 15px; max-width: 64ch; }
+
+/* ---------- open source ---------- */
+.oss-card { text-align: center; background: linear-gradient(180deg, #fff, var(--bg-soft)); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 72px 40px 68px; }
+.oss-card .sec-sub { margin: 20px auto 0; max-width: 70ch; }
+.oss-star { font-size: 17.5px; font-weight: 700; color: var(--ink); margin: 30px 0 36px; }
+.oss-star .star { color: #f5a623; }
+.oss-btns .star { color: #f5a623; }
+.oss-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.oss-btns .btn svg { width: 18px; height: 18px; }
+
+/* ---------- footer ---------- */
+.footer { margin-top: 0; border-top: 1px solid var(--line); background: var(--bg-soft); padding: 76px 0 44px; }
+.footer-grid { display: grid; grid-template-columns: 1.5fr .8fr .8fr 1.5fr; gap: 44px; }
+.footer .brand { margin-bottom: 13px; }
+.footer .f-tag { color: var(--ink-2); font-size: 14.5px; max-width: 32ch; }
+.footer h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
+.footer h4 i { font-style: normal; font-family: var(--mono); font-size: 9.5px; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin-left: 7px; display: none; }
+html[lang="zh-CN"] .footer h4 i { display: inline; }
+.footer ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer ul a { font-size: 14.5px; color: var(--ink-2); transition: color .16s ease; }
+.footer ul a:hover { color: var(--brand-600); }
+.footer-bottom { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13.5px; color: var(--ink-3); }
+
+/* ---------- footer contact + QR (merged into the link columns) ---------- */
+.fg-contact .fc-note { color: var(--ink-2); font-size: 13.5px; margin-bottom: 12px; text-wrap: balance; }
+.fc-mail { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13.5px; color: var(--brand-600); transition: color .16s ease; }
+.fc-mail:hover { color: var(--brand-700); text-decoration: underline; }
+.fc-mail svg { width: 16px; height: 16px; flex-shrink: 0; }
+.fc-qrs { display: flex; gap: 16px; margin-top: 20px; }
+.qr-item { text-align: center; }
+.qr-box { width: 92px; height: 92px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg) var(--qr, none) center/cover no-repeat; box-shadow: var(--shadow-xs); }
+.qr-label { display: block; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+/* the disclaimer sits in the bottom bar, right aligned */
+.footer-bottom .footer-disclaimer { margin: 0; padding: 0; border-top: none; font-size: 13px; color: var(--ink-3); text-align: right; max-width: 62ch; }
+.footer-bottom b { color: var(--ink-2); font-weight: 600; }
+
+/* ---------- reveal ---------- */
+.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.16,.8,.3,1), transform .6s cubic-bezier(.16,.8,.3,1); }
+.js .reveal.in { opacity: 1; transform: translateY(0); }
+.reveal[data-delay="1"] { transition-delay: .09s; }
+.reveal[data-delay="2"] { transition-delay: .18s; }
+.reveal[data-delay="3"] { transition-delay: .27s; }
+.reveal[data-delay="4"] { transition-delay: .36s; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: block; }
+  .cards, .cards.three { grid-template-columns: repeat(2, 1fr); }
+  .plug-grid { grid-template-columns: 1fr; gap: 36px; }
+  .steps { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid > div:first-child,
+  .footer-grid > div:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .brand-logo { height: 16px; }
+  .lang-opt { font-size: 11.5px; padding: 5px 7px; }
+  .theme-toggle { width: 34px; }
+  .nav-actions { gap: 7px; }
+  .oss-card { padding: 42px 22px 40px; }
+  .section { padding-top: 80px; }
+  .hero { padding: calc(var(--nav-h) + 72px) 0 96px; }
+  .showcase { padding-top: 40px; }
+  .hero-kicker { font-size: 13px; padding: 9px 14px; line-height: 1.5; align-items: flex-start; }
+  .hero-kicker::before { margin-top: 7px; }
+  .cards, .cards.three { grid-template-columns: 1fr; }
+  .hero-dl { flex-direction: column; align-items: stretch; }
+  .dl-btn { justify-content: center; }
+  .footer-grid { grid-template-columns: 1fr; gap: 26px; }
+  .footer-bottom .footer-disclaimer { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+  .js .reveal { opacity: 1; transform: none; }
+  .js .h1-mask h1 { transform: none; }
+}
+/* ============================================================
+   DARK THEME — DeepSeek Harness design tokens
+   ============================================================ */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  /* base */
+  --bg: #0a0a0a;
+  --bg-soft: #101010;
+  --bg-tint: #141414;
+  --ink: #ffffff;
+  --ink-2: rgba(255, 255, 255, 0.80);
+  --ink-3: rgba(255, 255, 255, 0.50);
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --brand: #6799fe;
+  --brand-600: #73a3d2;
+  --brand-700: #a9c5ff;
+  --brand-soft: rgba(103, 153, 254, 0.14);
+  --brand-tint: rgba(103, 153, 254, 0.28);
+  /* glass surfaces — white transparency, never flat grey */
+  --surface-1: rgba(255, 255, 255, 0.06);
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --surface-3: rgba(255, 255, 255, 0.02);
+  --surface-4: rgba(255, 255, 255, 0.015);
+  --surface-5: rgba(255, 255, 255, 0.12);
+  --surface-raised: rgba(255, 255, 255, 0.25);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-secondary: rgba(255, 255, 255, 0.20);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --inset-hairline: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --radius: 16px;
+  --radius-lg: 24px;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 16px -6px rgba(0, 0, 0, 0.6);
+  --shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 80px rgba(255, 255, 255, 0.07), 0 24px 64px rgba(0, 0, 0, 0.40);
+}
+
+/* the wordmark is dark navy — invert it so it reads on a black bar */
+html[data-theme="dark"] .brand-logo { filter: invert(1) hue-rotate(180deg); }
+
+/* nav: transparent at the top, 12px glass after scrolling */
+html[data-theme="dark"] .nav {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  transition: background .25s ease, border-color .2s ease, box-shadow .2s ease;
+}
+html[data-theme="dark"] .nav.scrolled { background: rgba(10, 10, 10, 0.72); border-bottom-color: var(--border-default); box-shadow: none; }
+html[data-theme="dark"] .mobile-menu { background: rgba(10, 10, 10, 0.94); }
+html[data-theme="dark"] .mobile-menu a { border-bottom-color: var(--border-default); }
+
+/* glass controls */
+html[data-theme="dark"] .lang-switch,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .nav-toggle { background: var(--surface-1); border-color: var(--border-subtle); color: var(--ink); }
+html[data-theme="dark"] .lang-opt { color: var(--ink-3); }
+html[data-theme="dark"] .lang-opt:hover { color: var(--ink); }
+html[data-theme="dark"] .lang-opt.on { background: var(--surface-5); color: #ffffff; }
+
+/* glass panels */
+html[data-theme="dark"] .card { background: var(--surface-2); border-color: var(--border-default); border-radius: 24px; box-shadow: var(--inset-hairline); }
+html[data-theme="dark"] .card:hover { background: var(--surface-1); border-color: var(--border-subtle); }
+html[data-theme="dark"] .step { background: var(--surface-3); border-color: var(--border-default); }
+/* feature frames take the 16px panel radius + the outer glow */
+html[data-theme="dark"] .shot img,
+html[data-theme="dark"] .plug-mock { border-radius: 16px; }
+html[data-theme="dark"] .plug-mock { background: var(--surface-2); border-color: var(--border-default); box-shadow: var(--shadow-lg); }
+html[data-theme="dark"] .pm-bar { background: var(--surface-3); }
+html[data-theme="dark"] .pm-row { border-bottom-color: var(--border-default); }
+html[data-theme="dark"] .pm-ico { background: var(--surface-1); }
+html[data-theme="dark"] .pm-kind { background: var(--surface-1); }
+html[data-theme="dark"] .shot img { background: #141414; border-color: var(--border-subtle); }
+html[data-theme="dark"] .band-gray .faq-item { background: var(--surface-2); border-color: var(--border-default); border-radius: 24px; }
+html[data-theme="dark"] .faq-list { border-top-color: var(--border-default); }
+html[data-theme="dark"] .faq-item { border-bottom-color: var(--border-default); }
+html[data-theme="dark"] .oss-card { background: var(--surface-2); border-color: var(--border-default); box-shadow: var(--inset-hairline); }
+html[data-theme="dark"] .footer { background: #0a0a0a; border-top-color: var(--border-default); }
+html[data-theme="dark"] .footer-bottom { border-top-color: var(--border-default); }
+html[data-theme="dark"] .fh-chips span { background: var(--surface-1); border-color: var(--border-subtle); color: var(--brand-700); }
+html[data-theme="dark"] .qr-box { background-color: #ffffff; }
+
+/* buttons — pill; primary is white on black, as on the official site */
+html[data-theme="dark"] .btn,
+html[data-theme="dark"] .dl-btn { border-radius: 100px; }
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .dl-btn.primary { background: #ffffff; border-color: #ffffff; color: #0a0a0a; box-shadow: none; }
+html[data-theme="dark"] .btn-primary:hover,
+html[data-theme="dark"] .dl-btn.primary:hover { background: rgba(255, 255, 255, 0.88); border-color: rgba(255, 255, 255, 0.88); color: #0a0a0a; }
+html[data-theme="dark"] .btn-ghost,
+html[data-theme="dark"] .dl-btn:not(.primary) { background: var(--surface-1); border-color: var(--border-secondary); color: #ffffff; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+html[data-theme="dark"] .btn-ghost:hover,
+html[data-theme="dark"] .dl-btn:not(.primary):hover { background: rgba(255, 255, 255, 0.20); border-color: rgba(255, 255, 255, 0.60); color: #ffffff; }
+
+/* on a white pill the sheen has to go dark to stay visible */
+html[data-theme="dark"] .dl-btn.primary::after { background: linear-gradient(100deg, transparent, rgba(10, 10, 10, 0.16), transparent); }
+
+/* hero: fluid aurora — ice blue with a restrained touch of warm gold */
+html[data-theme="dark"] .hero::before {
+  background:
+    radial-gradient(ellipse at 62% 38%, rgba(83, 141, 202, 0.34) 0%, rgba(45, 68, 139, 0.22) 30%, transparent 62%),
+    radial-gradient(circle at 52% 66%, rgba(238, 216, 170, 0.14) 0%, transparent 25%),
+    radial-gradient(ellipse at 72% 72%, rgba(26, 56, 112, 0.32) 0%, transparent 60%),
+    #0a0a0a;
+}
+html[data-theme="dark"] .hero::after { display: none; }
+html[data-theme="dark"] .hero-kicker { background: var(--surface-1); border-color: var(--border-subtle); color: var(--ink-2); }
+html[data-theme="dark"] .hero-kicker::before { box-shadow: 0 0 0 3px rgba(103, 153, 254, 0.20); }
+/* ice-blue metal rings: a thin gradient stroke instead of a flat hairline */
+html[data-theme="dark"] .ripples span {
+  border-color: transparent;
+  background: conic-gradient(from 200deg at 50% 50%,
+    rgba(153, 184, 230, 0.16) 0deg,
+    rgba(153, 184, 230, 0.72) 68deg,
+    rgba(255, 247, 209, 0.58) 122deg,
+    rgba(90, 141, 217, 0.30) 200deg,
+    rgba(31, 56, 115, 0.20) 286deg,
+    rgba(153, 184, 230, 0.16) 360deg);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.4px), #000 calc(100% - 1.4px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 1.4px), #000 calc(100% - 1.4px));
+}
+
+/* colour bands */
+html[data-theme="dark"] .band-tint { --band-bg: #0d0d0d; }
+html[data-theme="dark"] .band-gray { --band-bg: #0c0c0c; }
+html[data-theme="dark"] .band-dark {
+  --band-bg:
+    radial-gradient(78% 62% at 50% -14%, rgba(83, 141, 202, 0.24), transparent 66%),
+    radial-gradient(46% 46% at 84% 112%, rgba(238, 216, 170, 0.08), transparent 72%),
+    linear-gradient(180deg, #0d1118 0%, #0a0a0a 64%);
+}
+</style>
 </head>
 <body>
-  <!-- aurora background -->
-  <div class="aurora" aria-hidden="true">
-    <div class="aurora__ribbon"></div>
-    <div class="aurora__ribbon aurora__ribbon--2"></div>
-    <div class="aurora__blob aurora__blob--a"></div>
-    <div class="aurora__blob aurora__blob--b"></div>
-    <div class="aurora__blob aurora__blob--c"></div>
-    <div class="aurora__grid"></div>
-    <div class="aurora__noise"></div>
-    <div class="aurora__fog"></div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top">
+      <img class="brand-logo" src="assets/img/logo.png" alt="DSH Work" width="744" height="96" />
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#value" data-i18n="nav.value">产品优势</a>
+      <a href="#plugins" data-i18n="nav.plugins">插件生态</a>
+      <a href="#scenes" data-i18n="nav.scenes">应用场景</a>
+      <a href="#steps" data-i18n="nav.steps">如何使用</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="#opensource" data-i18n="nav.oss">GitHub 下载</a>
+    </nav>
+    <div class="nav-actions">
+      <div class="lang-switch" id="langSwitch" data-active="zh" role="group" aria-label="Language / 语言">
+        <button class="lang-opt" data-lang="zh" type="button">中文</button>
+        <button class="lang-opt" data-lang="en" type="button">EN</button>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light / dark theme">
+        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><span></span></button>
+    </div>
   </div>
-  <canvas id="particles" aria-hidden="true"></canvas>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#value" data-i18n="nav.value">产品优势</a>
+  <a href="#plugins" data-i18n="nav.plugins">插件生态</a>
+  <a href="#scenes" data-i18n="nav.scenes">应用场景</a>
+  <a href="#steps" data-i18n="nav.steps">如何使用</a>
+  <a href="#faq" data-i18n="nav.faq">FAQ</a>
+  <a href="#opensource" data-i18n="nav.oss">GitHub 下载</a>
+  <a href="#top" data-i18n="nav.cta">免费下载</a>
+</div>
 
-  <!-- ===== NAV ===== -->
-  <header class="nav" id="nav">
-    <div class="container nav__inner">
-      <a class="brand" href="#top" aria-label="DSHwork home">
-        <span class="brand__mark"><img src="assets/img/favicon.png" alt="" /></span>
-        <span class="brand__text">
-          <span class="brand__name">DSHwork</span>
-          <small class="brand__tag" data-i18n="nav.tag">DeepSeek Agent 工作台</small>
-        </span>
-      </a>
-      <nav class="nav__links" aria-label="Primary">
-        <a href="#features" data-i18n="nav.features">特性</a>
-        <a href="#download" data-i18n="nav.download">下载</a>
-        <a href="#community" data-i18n="nav.community">社区 DeepSeek.club</a>
-      </nav>
-      <div class="nav__cta">
-        <div class="lang-toggle" role="group" aria-label="Language">
-          <button type="button" class="lang-btn is-active" data-lang="zh">中文</button>
-          <span class="lang-sep" aria-hidden="true">/</span>
-          <button type="button" class="lang-btn" data-lang="en">EN</button>
-        </div>
-        <a class="btn btn--primary btn--sm" href="#download" data-i18n="nav.cta">下载</a>
+<main id="top">
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="ripples" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="container hero-inner">
+      <p class="hero-kicker reveal" data-i18n="hero.kicker">DSH Work 是基于 DeepSeek Harness 的开源桌面工作客户端</p>
+      <div class="h1-mask reveal" data-delay="1">
+        <h1 data-i18n="hero.h1">让 <span class="hl">DSH Work</span> 帮你高效完成<span class="nb">工作任务！</span></h1>
+      </div>
+      <p class="hero-sub reveal" data-delay="2" data-i18n="hero.sub">无需命令行，下载安装即用，直接获得 Harness 的先进生产力。</p>
+
+      <div class="hero-dl reveal" data-delay="3">
+        <a class="dl-btn primary" href="./dist/D1.zip" download>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5l7.4-1v7.1H3V5.5zm0 13l7.4 1v-7H3v6zM11.7 4.3L21 3v8.6h-9.3V4.3zm0 15.4L21 21v-8.5h-9.3v7.2z"/></svg>
+          <span data-i18n="download.win">下载 Windows 版</span>
+        </a>
+        <a class="dl-btn" href="./dist/DSHwork-0.1.0-arm64-mac.zip" download>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.9c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.4 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.5-.1 0-2.3-.9-2.3-3.1zM14.2 6.3c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.6.6-1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2z"/></svg>
+          <span data-i18n="download.mac">下载 macOS 版</span>
+        </a>
+      </div>
+      <p class="hero-note reveal" data-delay="4" data-i18n="hero.note">免费下载&nbsp;·&nbsp;本地部署&nbsp;·&nbsp;隐私安全</p>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 2 · APP INTERFACE ===================== -->
+  <section class="showcase">
+    <div class="container">
+      <figure class="shot reveal" data-delay="1">
+        <img src="assets/img/app-preview.png" width="1672" height="941" decoding="async"
+             alt="DSH Work 桌面客户端界面" data-i18n-alt="shot.alt" />
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== VALUE ===================== -->
+  <section class="section pb" id="value">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow"><span data-i18n="sec.value">产品优势</span><i>Advantages</i></span>
+        <h2 class="sec-title" data-i18n="value.title">打开就能工作，不用折腾环境</h2>
+        <p class="sec-sub" data-i18n="value.sub">把命令行的门槛拿掉，让 Harness 变成你桌面上一个普通的应用。</p>
+      </div>
+
+      <div class="cards">
+        <article class="card reveal">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <h3 data-i18n="c1.t">零命令行</h3>
+          <p data-i18n="c1.d">安装、配置、运行全部在图形界面里完成，告别终端和配置文件。</p>
+        </article>
+        <article class="card reveal" data-delay="1">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <h3 data-i18n="c2.t">下载即用</h3>
+          <p data-i18n="c2.d">装好打开就能工作，模型与工作区开箱就绪，无需额外搭建。</p>
+        </article>
+        <article class="card reveal" data-delay="2">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-3 8.3-7 9-4-.7-7-4.6-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.4-3.4"/></svg></div>
+          <h3 data-i18n="c3.t">本地优先</h3>
+          <p data-i18n="c3.d">文件与运行都在你的电脑上，数据可控，隐私安全。</p>
+        </article>
+        <article class="card reveal" data-delay="3">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+          <h3 data-i18n="c4.t">模型可切换</h3>
+          <p data-i18n="c4.d">在界面里切换 DeepSeek 模型与推理强度，按任务选最合适的。</p>
+        </article>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main id="top">
-    <!-- ===== HERO ===== -->
-    <section class="hero">
-      <div class="container hero__grid">
-        <div class="hero__copy">
-          <span class="hero__eyebrow"><i></i><span data-i18n="hero.eyebrow">DSHWORK.AI · AI 生产力工作台</span></span>
-          <h1 class="hero__title" data-i18n-html="hero.title">DSHwork,<em>解放你的生产力</em>。</h1>
-          <p class="hero__sub" data-i18n="hero.sub">零命令、开箱即用的 AI 工作台。打开它,你是用 AI 把活干完——而不是折腾开发者工具。</p>
-
-          <ul class="hero__pills">
-            <li><span class="pill-dot"></span><span data-i18n="p1">零命令</span></li>
-            <li><span class="pill-dot"></span><span data-i18n="p2">预置模板</span></li>
-            <li><span class="pill-dot"></span><span data-i18n="p3">一个窗口搞定一天</span></li>
-            <li><span class="pill-dot"></span><span data-i18n="p4">产物直接可用</span></li>
+  <!-- ===================== PLUGIN ECOSYSTEM ===================== -->
+  <section class="section pb" id="plugins">
+    <div class="container">
+      <div class="plug-grid">
+        <div class="plug-copy reveal">
+          <span class="pp-eyebrow">Everything is a plugin</span>
+          <h2 class="sec-title" data-i18n="fh.title">一切皆插件</h2>
+          <p class="plug-desc" data-i18n="fh.desc">精选高频工作场景的热门插件与 Skill 技能，打开就能用，不用到处找了。</p>
+          <ul class="plug-points">
+            <li data-i18n="fh.p1">模型、工具、技能、沙箱都由插件提供</li>
+            <li data-i18n="fh.p2">高频场景的插件与技能已帮你筛选好</li>
+            <li data-i18n="fh.p3">一键启用，不用配置环境</li>
           </ul>
-
-          <div class="hero__ctas">
-            <a class="btn btn--primary btn--lg" href="#download">
-              <span data-i18n="hero.cta">下载 DSHwork</span>
-              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
-            </a>
-            <a class="btn btn--ghost btn--lg" href="https://github.com/DeepSeek-club/dshwork" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
-              <span data-i18n="hero.ghost">查看 GitHub</span>
-            </a>
-          </div>
-
-          <div class="hero__badge">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span data-i18n="hero.badge">Windows / macOS · 双击即用 · 无需配置</span>
+          <div class="fh-chips">
+            <span data-i18n="fh.c1">文档处理</span>
+            <span data-i18n="fh.c2">数据分析</span>
+            <span data-i18n="fh.c3">网页抓取</span>
+            <span data-i18n="fh.c4">代码审查</span>
           </div>
         </div>
 
-        <!-- hero visual: workbench mock -->
-        <div class="hero__visual">
-          <div class="wb-mock">
-            <div class="wb-mock__bar">
-              <span class="wb-dot" style="background:#ff5f57"></span>
-              <span class="wb-dot" style="background:#febc2e"></span>
-              <span class="wb-dot" style="background:#28c840"></span>
-              <span class="wb-mock__url">DSHwork · 工作台</span>
+        <div class="plug-mock reveal" data-delay="1" aria-hidden="true">
+          <div class="pm-bar">
+            <span class="pm-dot"></span><span class="pm-dot"></span><span class="pm-dot"></span>
+            <span class="pm-title">plugin market</span>
+          </div>
+          <div class="pm-rows">
+            <div class="pm-row">
+              <span class="pm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+              <span class="pm-name">Doc Toolkit</span><span class="pm-kind">skill</span><span class="pm-sw on"></span>
             </div>
-            <div class="wb-mock__body">
-              <div class="wm-side">
-                <span class="wm-brand"><i></i>DSHwork</span>
-                <span class="wm-nav is-active">主页</span>
-                <span class="wm-nav">任务</span>
-                <span class="wm-nav">工作区</span>
-                <span class="wm-nav">模板库</span>
-                <span class="wm-nav">我的插件</span>
-              </div>
-              <div class="wm-main">
-                <div class="wm-title">今天,做点什么?</div>
-                <div class="wm-cards">
-                  <div class="wm-card"><b>研究报告</b><span>多来源资料 → 可编辑报告</span></div>
-                  <div class="wm-card"><b>文献整理</b><span>要点 + 提纲 + 引用</span></div>
-                  <div class="wm-card"><b>长文起草</b><span>从提纲到成稿</span></div>
-                  <div class="wm-card"><b>改写润色</b><span>更清晰、更专业</span></div>
-                </div>
-                <div class="wm-status"><i></i>就绪</div>
-              </div>
+            <div class="pm-row">
+              <span class="pm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/></svg></span>
+              <span class="pm-name">Data Analyst</span><span class="pm-kind">plugin</span><span class="pm-sw on"></span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg></span>
+              <span class="pm-name">Web Scraper</span><span class="pm-kind">skill</span><span class="pm-sw on"></span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+              <span class="pm-name">Code Reviewer</span><span class="pm-kind">plugin</span><span class="pm-sw on"></span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg></span>
+              <span class="pm-name">Calendar Sync</span><span class="pm-kind">plugin</span><span class="pm-sw"></span>
             </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- ===== WHY ===== -->
-    <section class="section why">
-      <div class="container">
-        <div class="section__head">
-          <span class="section__kicker" data-i18n="why.kicker">WHY DSHWORK</span>
-          <h2 class="section__title" data-i18n-html="why.title">AI 很强大,<br>它 <em>不该是道门槛</em>。</h2>
-          <p class="section__sub" data-i18n="why.sub">对普通知识工作者来说,命令、环境、Agent、插件……每个词都是一道门槛。DSHwork 把这些都藏起来,只给你一张办公桌。</p>
-        </div>
-        <div class="why__grid">
-          <div class="why__item">
-            <span class="why__num">01</span>
-            <h3 class="why__title" data-i18n="w1.title">门槛劝退</h3>
-            <p class="why__desc" data-i18n="w1.desc">强 AI 很强大,但命令与配置把太多人挡在门外。</p>
-          </div>
-          <div class="why__item">
-            <span class="why__num">02</span>
-            <h3 class="why__title" data-i18n="w2.title">双击即用</h3>
-            <p class="why__desc" data-i18n="w2.desc">像普通软件一样,双击图标,工作台就绪。</p>
-          </div>
-          <div class="why__item">
-            <span class="why__num">03</span>
-            <h3 class="why__title" data-i18n="w3.title">把事做成</h3>
-            <p class="why__desc" data-i18n="w3.desc">你不折腾工具,只把报告、调研、文档做成型。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== FEATURES ===== -->
-    <section class="section features" id="features">
-      <div class="container">
-        <div class="section__head">
-          <span class="section__kicker" data-i18n="features.kicker">FEATURES</span>
-          <h2 class="section__title" data-i18n="features.title">把复杂留给我们,把简单还给你</h2>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg></div>
-            <h3 data-i18n="f1.title">零命令</h3>
-            <p data-i18n="f1.desc">不用记命令、不用配环境,双击即用,自动检测并启动。</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg></div>
-            <h3 data-i18n="f2.title">预置模板</h3>
-            <p data-i18n="f2.desc">任务 = 模板:研究报告、资料调研、文献整理、长文起草……选一个就开工。</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 6h18v12H3z"/><path d="M9 19h6"/></svg></div>
-            <h3 data-i18n="f3.title">一个窗口搞定一天</h3>
-            <p data-i18n="f3.desc">项目、资料、任务、产物集中一处,不用在多个工具间切换。</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
-            <h3 data-i18n="f4.title">产物直接可用</h3>
-            <p data-i18n="f4.desc">生成可编辑的 Office 文档,打开就能用、就能改。</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== ECOSYSTEM ===== -->
-    <section class="section ecosystem" id="ecosystem">
-      <div class="container">
-        <div class="section__head">
-          <span class="section__kicker" data-i18n="eco.kicker">ECOSYSTEM</span>
-          <h2 class="section__title" data-i18n-html="eco.title">不只是工具,<br>是 <em>DeepSeek.club 生态</em>的落地窗口</h2>
-        </div>
-        <div class="eco__grid">
-          <article class="eco-card">
-            <h3 data-i18n="e1.title">装个插件就变强</h3>
-            <p data-i18n="e1.desc">DeepSeek.club 插件库 → 一键装进 DSHwork,能力随手扩展。</p>
-          </article>
-          <article class="eco-card">
-            <h3 data-i18n="e2.title">学了就会用</h3>
-            <p data-i18n="e2.desc">Harness 学院课程 → 学完直接在 DSHwork 里上手实践。</p>
-          </article>
-          <article class="eco-card">
-            <h3 data-i18n="e3.title">今天就能干活</h3>
-            <p data-i18n="e3.desc">预置模板直接产出报告、调研、文档,打开就用。</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== DOWNLOAD ===== -->
-    <section class="section download" id="download">
-      <div class="container">
-        <div class="section__head center">
-          <span class="section__kicker" data-i18n="dl.kicker">DOWNLOAD</span>
-          <h2 class="section__title" data-i18n="dl.title">下载 DSHwork</h2>
-          <p class="section__sub" data-i18n="dl.sub">Windows 与 macOS,双击即用。开源、免费、可审计。</p>
-        </div>
-
-        <div class="dl-grid">
-          <a class="dl-card" href="./dist/D1.zip" download>
-            <div class="dl-icon">
-              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M3 3h18v18H3zM3 3l8 8 8-8M12 11v9"/></svg>
-            </div>
-            <div>
-              <h3 data-i18n="dl.win">Windows 版</h3>
-              <p data-i18n="dl.winSub">x64 · 安装程序(NSIS)</p>
-            </div>
-            <span class="dl-arrow" aria-hidden="true">↓</span>
-          </a>
-          <a class="dl-card" href="./dist/DSHwork-0.1.0.dmg" download>
-            <div class="dl-icon">
-              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M18.7 14.4c-.2-2.9 2-4.6 2.1-4.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-2-.9-3.2-.8-1.7 0-3.2 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.4 0 1.8.8 3.1.8 1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.3-3zM15.8 6.2c.7-.9 1.1-2 1-3.2-1 0-2.2.6-2.9 1.5-.6.7-1.2 1.9-1 3 .9.1 2-.5 2.9-1.3z"/></svg>
-            </div>
-            <div>
-              <h3 data-i18n="dl.mac">macOS 版</h3>
-              <p data-i18n="dl.macSub">Universal · DMG</p>
-            </div>
-            <span class="dl-arrow" aria-hidden="true">↓</span>
-          </a>
-        </div>
-
-        <div class="dl-github">
-          <a class="btn btn--ghost btn--lg" href="https://github.com/DeepSeek-club/dshwork" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
-            <span data-i18n="dl.github">GitHub 入口 · 源码与 Releases</span>
-          </a>
-        </div>
-
-        <p class="dl-note" data-i18n="dl.note">安装包尚未发布时,请以 GitHub Releases 为准。</p>
-      </div>
-    </section>
-
-    <!-- ===== COMMUNITY ===== -->
-    <section class="section community" id="community">
-      <div class="container community__inner">
-        <div class="section__head left">
-          <span class="section__kicker" data-i18n="community.kicker">COMMUNITY</span>
-          <h2 class="section__title" data-i18n="community.title">由深求社区 DeepSeek.club 出品</h2>
-          <p class="section__sub" data-i18n="community.sub">全球领先的第三方 DeepSeek 开源生态社区:模型库、插件库 Plugin Hub、应用榜、Harness 学院。DSHwork 是这些资产落地到你桌面上的"最后一公里"。</p>
-          <a class="community-cta" href="https://deepseek.club/" target="_blank" rel="noopener" data-i18n="community.club">访问 deepseek.club →</a>
-        </div>
-        <div class="dshclub-card">
-          <div class="dshclub-head">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg>
-            <strong data-i18n="dsh.title">DSH.club · Harness 专区</strong>
-          </div>
-          <p class="dshclub-text" data-i18n="dsh.text">关于 Harness 的一切,在这里讨论、获取、共建。</p>
-          <p class="dshclub-em" data-i18n="dsh.em">开源,放大你的价值!</p>
-          <a class="dshclub-link" href="https://dsh.club/" target="_blank" rel="noopener" data-i18n="dsh.cta">进入 DSH.club →</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ===== FOOTER ===== -->
-  <footer class="footer">
-    <div class="container footer__inner">
-      <div class="footer__brand">
-        <span class="brand__mark sm"><img src="assets/img/favicon.png" alt="" /></span>
-        <span class="footer__brand-text">
-          <span class="line1">DSHwork</span>
-          <span class="line2"><span data-i18n="footer.tag">DeepSeek Agent 工作台</span> · <a class="footer__domain" href="https://dshwork.ai/">dshwork.ai</a></span>
-        </span>
-      </div>
-      <nav class="footer__links">
-        <a href="mailto:hello@deepseek.club"><span data-i18n="community.contact">联系我们:</span> <span>hello@deepseek.club</span></a>
-      </nav>
     </div>
-    <div class="container footer__legal">
-      <p data-i18n="footer.legal">DSHwork 是由深求社区(DeepSeek.club)维护的独立社区开源项目,与深度求索 / DeepSeek 官方无隶属、合作、授权或背书关系。</p>
-    </div>
-  </footer>
+  </section>
 
-  <script src="assets/js/main.js"></script>
+  <!-- ===================== SCENES ===================== -->
+  <section class="section band band-tint" id="scenes">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow"><span data-i18n="sec.scenes">应用场景</span><i>Use cases</i></span>
+        <h2 class="sec-title" data-i18n="scenes.title">把重复的活交给它</h2>
+        <p class="sec-sub" data-i18n="scenes.sub">日常工作中那些耗时又琐碎的事，都可以直接在桌面里交给 DSH Work。</p>
+      </div>
+
+      <div class="cards">
+        <article class="card reveal">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+          <h3 data-i18n="sc1.t">文档与报告</h3>
+          <p data-i18n="sc1.d">起草、改写、把零散资料整理成结构化文档或汇报。</p>
+        </article>
+        <article class="card reveal" data-delay="1">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
+          <h3 data-i18n="sc2.t">资料整理</h3>
+          <p data-i18n="sc2.d">汇总长文档、提取要点、生成摘要，省下翻页的时间。</p>
+        </article>
+        <article class="card reveal" data-delay="2">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3 data-i18n="sc3.t">任务自动化</h3>
+          <p data-i18n="sc3.d">把多步骤任务交给它拆解执行，你只管确认结果。</p>
+        </article>
+        <article class="card reveal" data-delay="3">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <h3 data-i18n="sc4.t">代码辅助</h3>
+          <p data-i18n="sc4.d">读写工作区文件、写脚本、排查报错，不用切窗口。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STEPS ===================== -->
+  <section class="section pb" id="steps">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow"><span data-i18n="sec.steps">如何使用</span><i>How it works</i></span>
+        <h2 class="sec-title" data-i18n="steps.title">三步，开始工作</h2>
+        <p class="sec-sub" data-i18n="steps.sub">从下载到上手，几分钟就够了。</p>
+      </div>
+
+      <div class="steps">
+        <div class="step reveal">
+          <span class="s-num">01</span>
+          <h3 data-i18n="s1.t">下载安装</h3>
+          <p data-i18n="s1.d">选择 Windows 或 macOS 版本，安装包双击即可完成。</p>
+        </div>
+        <div class="step reveal" data-delay="1">
+          <span class="s-num">02</span>
+          <h3 data-i18n="s2.t">连接 DeepSeek</h3>
+          <p data-i18n="s2.d">在设置里填入 API Key，点一下就能连上 Harness。</p>
+        </div>
+        <div class="step reveal" data-delay="2">
+          <span class="s-num">03</span>
+          <h3 data-i18n="s3.t">开始工作</h3>
+          <p data-i18n="s3.d">在桌面里对话、写文档、跑任务，Harness 全程为你干活。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section band band-gray" id="faq">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow"><span data-i18n="sec.faq">常见问题</span><i>FAQ</i></span>
+        <h2 class="sec-title" data-i18n="faq.title">你可能想问</h2>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item reveal">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="q1">DSH Work 是什么？</span><span class="plus"></span></button>
+          <div class="faq-a"><p data-i18n="a1">DSH Work 是 DeepSeek Harness 的桌面工作客户端，支持 Windows 与 macOS，让你不必碰命令行就能使用 Harness。</p></div>
+        </div>
+        <div class="faq-item reveal" data-delay="1">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="q2">需要会命令行吗？</span><span class="plus"></span></button>
+          <div class="faq-a"><p data-i18n="a2">不需要。安装、配置、运行都在图形界面里完成，不用装环境、不用敲命令。</p></div>
+        </div>
+        <div class="faq-item reveal" data-delay="2">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="q3">需要 DeepSeek API Key 吗？</span><span class="plus"></span></button>
+          <div class="faq-a"><p data-i18n="a3">需要。首次使用时在设置里填入 API Key 即可，不需要改任何配置文件。</p></div>
+        </div>
+        <div class="faq-item reveal" data-delay="3">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="q4">可以接入其他模型吗？</span><span class="plus"></span></button>
+          <div class="faq-a"><p data-i18n="a4">可以。除 DeepSeek 官方模型外，DSH Work 还能通过 OpenAI / Anthropic 兼容接口接入其他厂商的模型 —— 例如 Claude、GPT、Gemini、通义千问、Kimi、GLM，也可以通过 OpenRouter、Ollama、vLLM 接入第三方或本地模型。在设置里填好接口地址与 API Key 即可，无需改代码。</p></div>
+        </div>
+        <div class="faq-item reveal" data-delay="3">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="q5">支持哪些系统？</span><span class="plus"></span></button>
+          <div class="faq-a"><p data-i18n="a5">目前支持 Windows 10 及以上与 macOS 12 及以上，Linux 版本在计划中。</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== OPEN SOURCE / GITHUB ===================== -->
+  <section class="section band band-dark" id="opensource">
+    <div class="container">
+      <div class="oss-card reveal">
+        <span class="eyebrow"><span data-i18n="sec.oss">开源项目</span><i>Open source</i></span>
+        <h2 class="sec-title" data-i18n="oss.title">开源项目，免费共享</h2>
+        <p class="sec-sub" data-i18n="oss.sub">DSH Work 由深求社区（DeepSeek.club）开源维护，代码完全公开，欢迎自由使用与共建。</p>
+        <p class="oss-star" data-i18n="oss.star">如果您觉得好用，去给我们加个星吧 <span class="star">★</span></p>
+        <div class="oss-btns">
+          <a class="btn btn-primary" href="https://github.com/deepseek-club/dshwork" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            <span data-i18n="oss.gh">GitHub 下载</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/deepseek-club/dshwork" target="_blank" rel="noopener">
+            <span class="star">★</span>
+            <span data-i18n="oss.starBtn">去点个 Star</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="#top">
+          <img class="brand-logo" src="logo.png" alt="DSH Work" width="744" height="96" />
+        </a>
+        <p class="f-tag" data-i18n="footer.tag">DeepSeek Harness 的桌面工作客户端。</p>
+      </div>
+      <div>
+        <h4><span data-i18n="footer.col1">产品</span><i>Product</i></h4>
+        <ul>
+          <li><a href="#value" data-i18n="nav.value">产品优势</a></li>
+          <li><a href="#plugins" data-i18n="nav.plugins">插件生态</a></li>
+          <li><a href="#scenes" data-i18n="nav.scenes">应用场景</a></li>
+          <li><a href="#steps" data-i18n="nav.steps">如何使用</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span data-i18n="footer.col2">资源</span><i>Resources</i></h4>
+        <ul>
+          <li><a href="https://github.com/deepseek-club/dshwork" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+          <li><a href="#top" data-i18n="nav.cta">免费下载</a></li>
+        </ul>
+      </div>
+      <div class="fg-contact">
+        <h4><span data-i18n="footer.contactTitle">联系我们</span><i>Contact</i></h4>
+        <p class="fc-note" data-i18n="footer.contactNote">商务合作、问题反馈，欢迎邮件或扫码联系我们。</p>
+        <a class="fc-mail" href="mailto:hello@deepseek.club">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>
+          <span>hello@deepseek.club</span>
+        </a>
+        <div class="fc-qrs">
+          <div class="qr-item">
+            <div class="qr-box" style="--qr: url(assets/img/qr-wechat.png)"></div>
+            <span class="qr-label" data-i18n="footer.qrWechat">官方微信</span>
+          </div>
+          <div class="qr-item">
+            <div class="qr-box" style="--qr: url(assets/img/qr-group.png)"></div>
+            <span class="qr-label" data-i18n="footer.qrGroup">用户群</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span><span data-i18n="footer.license">开源</span> · © 2026 <b>DSH Work</b> · dshwork.ai</span>
+      <span class="footer-disclaimer" data-i18n="footer.disclaimer">DSH Work 由深求社区（DeepSeek.club）独立开发与维护，非 DeepSeek 官方出品</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ================= i18n ================= */
+const I18N = {
+  zh: {
+    "nav.value": "产品优势",
+    "nav.plugins": "插件生态",
+    "nav.scenes": "应用场景",
+    "nav.steps": "如何使用",
+    "nav.faq": "FAQ",
+    "nav.oss": "GitHub 下载",
+    "nav.cta": "免费下载",
+    "hero.kicker": "DSH Work 是基于 DeepSeek Harness 的开源桌面工作客户端",
+    "hero.h1": "让 <span class=\"hl\">DSH Work</span> 帮你高效完成<span class=\"nb\">工作任务！</span>",
+    "hero.sub": "无需命令行，下载安装即用，直接获得 Harness 的先进生产力。",
+    "hero.note": "免费下载&nbsp;·&nbsp;本地部署&nbsp;·&nbsp;隐私安全",
+    "shot.alt": "DSH Work 桌面客户端界面",
+    "sec.value": "产品优势",
+    "value.title": "打开就能工作，不用折腾环境",
+    "value.sub": "把命令行的门槛拿掉，让 Harness 变成你桌面上一个普通的应用。",
+    "c1.t": "零命令行", "c1.d": "安装、配置、运行全部在图形界面里完成，告别终端和配置文件。",
+    "c2.t": "下载即用", "c2.d": "装好打开就能工作，模型与工作区开箱就绪，无需额外搭建。",
+    "c3.t": "本地优先", "c3.d": "文件与运行都在你的电脑上，数据可控，隐私安全。",
+    "c4.t": "模型可切换", "c4.d": "在界面里切换 DeepSeek 模型与推理强度，按任务选最合适的。",
+    "fh.title": "一切皆插件",
+    "fh.desc": "精选高频工作场景的热门插件与 Skill 技能，打开就能用，不用到处找了。",
+    "fh.p1": "模型、工具、技能、沙箱都由插件提供",
+    "fh.p2": "高频场景的插件与技能已帮你筛选好",
+    "fh.p3": "一键启用，不用配置环境",
+    "fh.c1": "文档处理", "fh.c2": "数据分析", "fh.c3": "网页抓取", "fh.c4": "代码审查",
+    "sec.scenes": "应用场景",
+    "scenes.title": "把重复的活交给它",
+    "scenes.sub": "日常工作中那些耗时又琐碎的事，都可以直接在桌面里交给 DSH Work。",
+    "sc1.t": "文档与报告", "sc1.d": "起草、改写、把零散资料整理成结构化文档或汇报。",
+    "sc2.t": "资料整理", "sc2.d": "汇总长文档、提取要点、生成摘要，省下翻页的时间。",
+    "sc3.t": "任务自动化", "sc3.d": "把多步骤任务交给它拆解执行，你只管确认结果。",
+    "sc4.t": "代码辅助", "sc4.d": "读写工作区文件、写脚本、排查报错，不用切窗口。",
+    "sec.steps": "如何使用",
+    "steps.title": "三步，开始工作",
+    "steps.sub": "从下载到上手，几分钟就够了。",
+    "s1.t": "下载安装", "s1.d": "选择 Windows 或 macOS 版本，安装包双击即可完成。",
+    "s2.t": "连接 DeepSeek", "s2.d": "在设置里填入 API Key，点一下就能连上 Harness。",
+    "s3.t": "开始工作", "s3.d": "在桌面里对话、写文档、跑任务，Harness 全程为你干活。",
+    "download.win": "下载 Windows 版",
+    "download.mac": "下载 macOS 版",
+    "sec.faq": "常见问题",
+    "faq.title": "你可能想问",
+    "q1": "DSH Work 是什么？",
+    "a1": "DSH Work 是 DeepSeek Harness 的桌面工作客户端，支持 Windows 与 macOS，让你不必碰命令行就能使用 Harness。",
+    "q2": "需要会命令行吗？",
+    "a2": "不需要。安装、配置、运行都在图形界面里完成，不用装环境、不用敲命令。",
+    "q3": "需要 DeepSeek API Key 吗？",
+    "a3": "需要。首次使用时在设置里填入 API Key 即可，不需要改任何配置文件。",
+    "q4": "可以接入其他模型吗？",
+    "a4": "可以。除 DeepSeek 官方模型外，DSH Work 还能通过 OpenAI / Anthropic 兼容接口接入其他厂商的模型 —— 例如 Claude、GPT、Gemini、通义千问、Kimi、GLM，也可以通过 OpenRouter、Ollama、vLLM 接入第三方或本地模型。在设置里填好接口地址与 API Key 即可，无需改代码。",
+    "q5": "支持哪些系统？",
+    "a5": "目前支持 Windows 10 及以上与 macOS 12 及以上，Linux 版本在计划中。",
+    "sec.oss": "开源项目",
+    "oss.title": "开源项目，免费共享",
+    "oss.sub": "DSH Work 由深求社区（DeepSeek.club）开源维护，代码完全公开，欢迎自由使用与共建。",
+    "oss.star": "如果您觉得好用，去给我们加个星吧 <span class=\"star\">★</span>",
+    "oss.gh": "GitHub 下载",
+    "oss.starBtn": "去点个 Star",
+    "footer.license": "开源",
+    "footer.contactTitle": "联系我们",
+    "footer.contactNote": "商务合作、问题反馈，欢迎邮件或扫码联系我们。",
+    "footer.qrWechat": "官方微信",
+    "footer.qrGroup": "用户群",
+    "footer.disclaimer": "DSH Work 由深求社区（DeepSeek.club）独立开发与维护，非 DeepSeek 官方出品",
+    "footer.tag": "DSH 工作台 · DeepSeek Harness 的桌面工作客户端",
+    "footer.col1": "产品", "footer.col2": "资源"
+  },
+  en: {
+    "nav.value": "Advantages",
+    "nav.plugins": "Plugins",
+    "nav.scenes": "Use cases",
+    "nav.steps": "How it works",
+    "nav.faq": "FAQ",
+    "nav.oss": "Download on GitHub",
+    "nav.cta": "Download",
+    "hero.kicker": "DSH Work is an open-source desktop client based on DeepSeek Harness.",
+    "hero.h1": "Let <span class=\"hl\">DSH Work</span> get your work done efficiently!",
+    "hero.sub": "No command line — download, install, and get the full productivity of Harness.",
+    "hero.note": "Free download&nbsp;·&nbsp;Local deployment&nbsp;·&nbsp;Privacy-first",
+    "shot.alt": "DSH Work desktop client interface",
+    "sec.value": "Advantages",
+    "value.title": "Open it and work — no environment to set up",
+    "value.sub": "We removed the command-line barrier and made Harness just another app on your desktop.",
+    "c1.t": "No command line", "c1.d": "Install, configure, and run entirely in a graphical UI — no terminal, no config files.",
+    "c2.t": "Ready out of the box", "c2.d": "Install it, open it, and work — models and workspace are ready with no extra setup.",
+    "c3.t": "Local-first", "c3.d": "Your files and execution stay on your machine — data stays under your control.",
+    "c4.t": "Switchable models", "c4.d": "Switch DeepSeek models and reasoning effort in the UI — pick the right one per task.",
+    "fh.title": "Everything is a plugin",
+    "fh.desc": "The most useful plugins and skills for everyday work are already curated — ready to use, no hunting around.",
+    "fh.p1": "Models, tools, skills and sandboxes are all provided by plugins",
+    "fh.p2": "The plugins and skills that matter most are already curated",
+    "fh.p3": "Enable with one click — no environment setup",
+    "fh.c1": "Document work", "fh.c2": "Data analysis", "fh.c3": "Web scraping", "fh.c4": "Code review",
+    "sec.scenes": "Use cases",
+    "scenes.title": "Hand off the repetitive work",
+    "scenes.sub": "The time-consuming, tedious parts of your day can go straight to DSH Work.",
+    "sc1.t": "Docs & reports", "sc1.d": "Draft, rewrite, and turn scattered notes into structured documents or reports.",
+    "sc2.t": "Research & summaries", "sc2.d": "Digest long documents, pull out the key points, and generate summaries.",
+    "sc3.t": "Task automation", "sc3.d": "Hand over multi-step tasks — it plans, executes, and you just confirm.",
+    "sc4.t": "Coding help", "sc4.d": "Read and write workspace files, write scripts, and debug without switching windows.",
+    "sec.steps": "How it works",
+    "steps.title": "Three steps to get working",
+    "steps.sub": "From download to productive in a few minutes.",
+    "s1.t": "Download & install", "s1.d": "Pick Windows or macOS — the installer handles the rest.",
+    "s2.t": "Connect DeepSeek", "s2.d": "Enter your API key in Settings and connect to Harness with one click.",
+    "s3.t": "Start working", "s3.d": "Chat, write, and run tasks on your desktop while Harness does the work.",
+    "download.win": "Download for Windows",
+    "download.mac": "Download for macOS",
+    "sec.faq": "FAQ",
+    "faq.title": "Frequently asked questions",
+    "q1": "What is DSH Work?",
+    "a1": "DSH Work is the desktop client for DeepSeek Harness, available for Windows and macOS — use Harness without ever touching a command line.",
+    "q2": "Do I need to use the command line?",
+    "a2": "No. Install, configure, and run everything in a graphical UI — no environments to set up, no commands to type.",
+    "q3": "Do I need a DeepSeek API key?",
+    "a3": "Yes. Enter your API key in Settings on first launch — no config files to edit.",
+    "q4": "Can I connect other models?",
+    "a4": "Yes. Besides DeepSeek's own models, DSH Work can connect to other providers through OpenAI- or Anthropic-compatible endpoints — Claude, GPT, Gemini, Qwen, Kimi, GLM and more — or reach third-party and local models via OpenRouter, Ollama, or vLLM. Just enter the endpoint URL and API key in Settings; no code changes needed.",
+    "q5": "Which systems are supported?",
+    "a5": "Windows 10 and above, and macOS 12 and above. A Linux build is planned.",
+    "sec.oss": "Open source",
+    "oss.title": "Open source, free for everyone",
+    "oss.sub": "DSH Work is open-sourced and maintained by DeepSeek.club — the code is fully public and free to use.",
+    "oss.star": "If you find it useful, give us a star <span class=\"star\">★</span>",
+    "oss.gh": "Download on GitHub",
+    "oss.starBtn": "Star the project",
+    "footer.license": "Open source",
+    "footer.contactTitle": "Contact us",
+    "footer.contactNote": "For partnerships or feedback, reach us by email or scan a code.",
+    "footer.qrWechat": "Official WeChat",
+    "footer.qrGroup": "User group",
+    "footer.disclaimer": "DSH Work is independently built and maintained by DeepSeek.club — it is not an official DeepSeek product",
+    "footer.tag": "DSH Workspace · The desktop client for DeepSeek Harness",
+    "footer.col1": "Product", "footer.col2": "Resources"
+  }
+};
+
+let currentLang = localStorage.getItem('dsh-lang') || 'zh';
+
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('dsh-lang', lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (I18N[lang][key] != null) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (I18N[lang][key] != null) el.setAttribute('placeholder', I18N[lang][key]);
+  });
+  document.querySelectorAll('[data-i18n-alt]').forEach(el => {
+    const key = el.getAttribute('data-i18n-alt');
+    if (I18N[lang][key] != null) el.setAttribute('alt', I18N[lang][key]);
+  });
+
+  const toggle = document.getElementById('langSwitch');
+  if (toggle) toggle.setAttribute('data-active', lang);
+  document.querySelectorAll('.lang-opt').forEach((o) => {
+    o.classList.toggle('on', o.dataset.lang === lang);
+  });
+  document.title = lang === 'zh'
+    ? 'DSH Work — DeepSeek Harness 桌面工作客户端'
+    : 'DSH Work — Desktop client for DeepSeek Harness';
+}
+
+/* ================= nav scroll state ================= */
+const navEl = document.getElementById('nav');
+function onScroll() { navEl.classList.toggle('scrolled', window.scrollY > 8); }
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+/* ================= mobile nav ================= */
+const navToggle = document.getElementById('navToggle');
+const mobileMenu = document.getElementById('mobileMenu');
+function closeMenu() {
+  mobileMenu.classList.remove('open');
+  navToggle.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+}
+navToggle.addEventListener('click', () => {
+  const open = mobileMenu.classList.toggle('open');
+  navToggle.classList.toggle('open', open);
+  navToggle.setAttribute('aria-expanded', String(open));
+});
+mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+
+/* ================= reveal on scroll ================= */
+const revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => io.observe(el));
+} else {
+  revealEls.forEach(el => el.classList.add('in'));
+}
+
+/* ================= faq accordion ================= */
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const answer = item.querySelector('.faq-a');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(o => {
+      if (o !== item) {
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = null;
+        o.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+      }
+    });
+    if (isOpen) {
+      item.classList.remove('open');
+      answer.style.maxHeight = null;
+      btn.setAttribute('aria-expanded', 'false');
+    } else {
+      item.classList.add('open');
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ================= lang toggle ================= */
+document.querySelectorAll('.lang-opt').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+/* ================= theme toggle ================= */
+let currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+function applyTheme(theme) {
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('dsh-theme', theme); } catch (e) { /* ignore */ }
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.classList.toggle('is-dark', theme === 'dark');
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+applyTheme(currentTheme);
+
+/* ================= init ================= */
+applyLang(currentLang);
+</script>
 </body>
 </html>

@@ -40,11 +40,6 @@
         "from": "vendor",
         "to": "vendor",
         "filter": ["**/*"]
-      },
-      {
-        "from": "../plugins/dsh-client-ui-dshwork",
-        "to": "plugins/dsh-client-ui-dshwork",
-        "filter": ["**/*"]
       }
     ],
     "protocols": [

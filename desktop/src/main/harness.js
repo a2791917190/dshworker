@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { ensureNodeRuntime, findSystemNode } = require('./node-runtime');
-const { ensureWorkbenchMounted, resolveDshBin } = require('./profile-mount');
+const { ensureWorkbenchMounted, removeWorkbenchMounted, profileDirFor, defaultProfileName, resolveDshBin } = require('./profile-mount');
 const { ensureDedicatedHome } = require('./dsh-home');
 const { log } = require('./log');
 
@@ -314,12 +314,20 @@ async function bootHarness(mode = 'bundled', options = {}) {
     dshBin = resolveDshBin() || null;
   }
 
-  // 在「确定 home 之后」挂载工作台插件(私有 home 时 ensureDedicatedHome 已改 DSH_HOME)。
-  const mount = await ensureWorkbenchMounted({
-    node: runtime.node,
-    dshBin: dshBin || undefined
-  });
-  log('[profile-mount] result:', mount ? (mount.ok ? 'mounted' : `not-mounted:${mount.reason}`) : 'skipped');
+  // 现阶段:默认使用「原生 harness」,不挂载 DSHwork 工作台插件。
+  // 若之前挂载过,这里主动清掉,让页面回到原生 harness 界面。
+  // (如需恢复工作台插件:设 DSHWORK_MOUNT_WORKBENCH=1)
+  if (process.env.DSHWORK_MOUNT_WORKBENCH === '1') {
+    const mount = await ensureWorkbenchMounted({ node: runtime.node, dshBin: dshBin || undefined });
+    log('[profile-mount] result:', mount ? (mount.ok ? 'mounted' : `not-mounted:${mount.reason}`) : 'skipped');
+  } else {
+    try {
+      const removed = removeWorkbenchMounted(profileDirFor(defaultProfileName()));
+      log('[profile-mount] native harness; workbench plugin unmounted:', removed ? 'yes' : 'nothing-to-remove');
+    } catch (err) {
+      log('[profile-mount] unmount skipped:', err && err.message);
+    }
+  }
 
   // 捕获 harness 输出,用于提取其网页 auth token(dsh web 打印的 ?token=)。
   // 限制缓存大小,避免 run 久了输出无限膨胀。
@@ -356,7 +364,15 @@ async function bootHarness(mode = 'bundled', options = {}) {
     log('[harness] npx update failed; falling back to bundled harness');
     const prep = ensureDedicatedHome(process.env.DSHWORK_PRIVATE_HOME_BASE);
     log('[harness] bundled fallback; private DSH_HOME=', prep.home);
-    await ensureWorkbenchMounted({ node: runtime.node, dshBin: bundled.binPath });
+    if (process.env.DSHWORK_MOUNT_WORKBENCH === '1') {
+      await ensureWorkbenchMounted({ node: runtime.node, dshBin: bundled.binPath });
+    } else {
+      try {
+        removeWorkbenchMounted(profileDirFor(defaultProfileName()));
+      } catch (_) {
+        /* 忽略 */
+      }
+    }
     spawned = await spawnBundledHarness(runtime, bundled, onOutput);
     // 清理 npx 可能留下的 3080 占用(若有)
     up = await waitForUp(HARNESS_URL, 45000);
