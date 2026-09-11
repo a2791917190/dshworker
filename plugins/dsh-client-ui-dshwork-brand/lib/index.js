@@ -25,7 +25,7 @@ const MARKET_ROUTE = '/dshwork/api/market';
 const MARKET_INSTALL_ROUTE = '/dshwork/api/market/install';
 
 const PROFILE_NAME = process.env.DSHWORK_HARNESS_PROFILE || 'web';
-const MARKET_URL = process.env.DSHWORK_MARKET_URL || '';
+const MARKET_URL = process.env.DSHWORK_MARKET_URL || 'https://deepseek.club/plugins';
 const MARKET_QUERY = process.env.DSHWORK_MARKET_QUERY || 'keywords:dsh-plugin';
 const NPM_REGISTRY = (process.env.DSHWORK_NPM_REGISTRY || 'https://registry.npmjs.org').replace(/\/+$/, '');
 
@@ -98,23 +98,42 @@ function setEnabled(name, enabled) {
 // 插件市场
 // ---------------------------------------------------------------------------
 
+function pickName(p) {
+  const v = p.name || p.package || p.pkg || p.repo || p.repository || p.title || p.slug;
+  return typeof v === 'string' ? v.trim() : '';
+}
+
 function normalizeItem(p) {
-  if (!p || typeof p.name !== 'string') return null;
+  if (!p || typeof p !== 'object') return null;
+  const name = pickName(p);
+  if (!name || name.length > 160) return null;
   const author = p.author && typeof p.author === 'object' ? p.author.name : p.author;
   return {
-    name: p.name,
-    description: p.description || '',
-    version: p.version || (p.distTags && p.distTags.latest) || '',
-    author: author || p.publisher || p.maintainers?.[0]?.name || '',
-    homepage: (p.links && p.links.homepage) || p.homepage || ''
+    name,
+    description: String(p.description || p.summary || p.desc || '').slice(0, 300),
+    version: String(p.version || (p.distTags && p.distTags.latest) || ''),
+    author: String(author || p.publisher || p.owner || ''),
+    homepage: String((p.links && p.links.homepage) || p.homepage || p.url || p.html_url || '')
   };
 }
 
+function dedupe(items) {
+  const seen = new Set();
+  const out = [];
+  for (const it of items) {
+    if (!it || seen.has(it.name)) continue;
+    seen.add(it.name);
+    out.push(it);
+  }
+  return out;
+}
+
 function normalizeList(data) {
-  if (Array.isArray(data)) return data.map(normalizeItem).filter(Boolean);
-  if (data && Array.isArray(data.plugins)) return data.plugins.map(normalizeItem).filter(Boolean);
-  if (data && Array.isArray(data.objects)) return data.objects.map((o) => normalizeItem(o.package || o)).filter(Boolean);
-  if (data && data.results) return normalizeList(data.results);
+  if (Array.isArray(data)) return dedupe(data.map(normalizeItem).filter(Boolean));
+  if (data && Array.isArray(data.plugins)) return dedupe(data.plugins.map(normalizeItem).filter(Boolean));
+  if (data && Array.isArray(data.objects)) return dedupe(data.objects.map((o) => normalizeItem(o.package || o)).filter(Boolean));
+  if (data && Array.isArray(data.data)) return dedupe(data.data.map(normalizeItem).filter(Boolean));
+  if (data && Array.isArray(data.items)) return dedupe(data.items.map(normalizeItem).filter(Boolean));
   return [];
 }
 
@@ -124,10 +143,112 @@ async function fetchJson(url) {
   return res.json();
 }
 
-async function marketList() {
-  if (MARKET_URL) {
-    return { source: MARKET_URL, items: normalizeList(await fetchJson(MARKET_URL)) };
+/** 在任意 JSON 结构里找「像插件列表」的数组(有 name/description 之类的对象数组)。 */
+function collectPluginArrays(node, out, depth) {
+  if (depth > 7 || !node || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    const objs = node.filter((x) => x && typeof x === 'object' && !Array.isArray(x));
+    if (objs.length >= 2 && objs.filter((o) => pickName(o)).length >= Math.min(2, objs.length)) {
+      const items = objs.map(normalizeItem).filter(Boolean);
+      if (items.length >= 2) out.push(items);
+    }
+    for (const x of node) collectPluginArrays(x, out, depth + 1);
+    return;
   }
+  for (const k of Object.keys(node)) collectPluginArrays(node[k], out, depth + 1);
+}
+
+/** 从 HTML 里提取内联 JSON(script[type=application/json]、__NEXT_DATA__、window.__NUXT__ 等)。 */
+function extractFromHtml(html) {
+  const best = [];
+  const push = (items) => {
+    if (!items || !items.length) return;
+    if (items.length > best.length) {
+      best.length = 0;
+      best.push(...items);
+    }
+  };
+
+  // 1) <script type="application/json"> 或 id 里带 NEXT/NUXT/INITIAL 的脚本
+  const scriptRe = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = scriptRe.exec(html)) !== null) {
+    const body = (m[1] || '').trim();
+    if (body.length < 40 || body[0] !== '{' && body[0] !== '[') continue;
+    try {
+      const data = JSON.parse(body);
+      const found = [];
+      collectPluginArrays(data, found, 0);
+      for (const items of found) push(items);
+    } catch (_) {
+      /* 不是纯 JSON,跳过 */
+    }
+  }
+
+  // 2) 兜底:匹配 HTML 里出现的 apollo/next 状态里的 JSON 片段
+  const jsonRe = /\{"(?:plugins|list|data|items)"\s*:\s*\[[\s\S]{20,20000}?\]\s*\}/g;
+  while ((m = jsonRe.exec(html)) !== null) {
+    try {
+      const found = [];
+      collectPluginArrays(JSON.parse(m[0]), found, 0);
+      for (const items of found) push(items);
+    } catch (_) {
+      /* 忽略 */
+    }
+  }
+  return best[0] || [];
+}
+
+/** 从 HTML/JS 里嗅探可能的 API 路径。 */
+function discoverApiPaths(text) {
+  const paths = new Set();
+  const re = /["'`](\/(?:api|v1|v2)\/[A-Za-z0-9_\-./]{2,60})["'`]/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const p = m[1];
+    if (/plugin|market|list|store|extension/i.test(p)) paths.add(p);
+  }
+  return Array.from(paths).slice(0, 8);
+}
+
+/** 智能拉取:JSON 直接用;HTML 则挖内联 JSON、再嗅探 API。 */
+async function fetchMarketFromUrl(url) {
+  const res = await fetch(url, { headers: { accept: 'application/json, text/html;q=0.9, */*;q=0.8' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+  const text = await res.text();
+
+  // 1) 本身就是 JSON
+  try {
+    const data = JSON.parse(text);
+    const items = normalizeList(data);
+    if (items.length) return { source: url, items };
+    const found = [];
+    collectPluginArrays(data, found, 0);
+    if (found.length) return { source: url, items: found[0] };
+  } catch (_) {
+    /* 不是 JSON */
+  }
+
+  // 2) HTML:内联 JSON
+  const scraped = extractFromHtml(text);
+  if (scraped.length) return { source: `${url} (内联数据)`, items: scraped };
+
+  // 3) HTML:嗅探 API 再试
+  for (const p of discoverApiPaths(text)) {
+    try {
+      const abs = new URL(p, url).href;
+      const items = normalizeList(await fetchJson(abs));
+      if (items.length) return { source: abs, items };
+    } catch (_) {
+      /* 试下一个 */
+    }
+  }
+
+  return { source: url, items: [] };
+}
+
+async function marketList() {
+  if (MARKET_URL) return fetchMarketFromUrl(MARKET_URL);
   const url = `${NPM_REGISTRY}/-/v1/search?text=${encodeURIComponent(MARKET_QUERY)}&size=50`;
   return { source: `npm:${MARKET_QUERY}`, items: normalizeList(await fetchJson(url)) };
 }
