@@ -98,7 +98,11 @@ window.__ModuleLoader__.load({
 		}
 		// 侧边栏左上角品牌 mark:官方 FishLogo(svg)→ 换成我们的 logo。
 		function patchSidebarBrand() {
+			// 判据是「我们的槽位**真的渲染出来了**」,而不是「注册成功」——
+			// 注册成功不等于赢得渲染(遮蔽失败时注册照样成功)。只有当 DOM 里
+			// 找不到槽位渲染的 mark 时,才由这里兜底,避免 logo 两边都不出现。
 			try {
+				if (document.querySelector("img[data-dshwork-slot-mark]")) return;
 				if (document.querySelector("img[data-dshwork-brand-mark]")) return;
 				// 品牌名是矢量字(不是文本节点),所以按「位置」找:左上角那块 svg。
 				const svgs = document.querySelectorAll("svg");
@@ -170,6 +174,14 @@ window.__ModuleLoader__.load({
 			// harness 给的 size(首页约 34)偏小,这里放大 ~1.8 倍,竖排居中时更醒目。
 			const s = Math.round((size || 34) * 1.8);
 			return React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", style: { objectFit: "contain", display: "block" } });
+		}
+
+		// 侧栏品牌 mark:官方槽位 sidebar.brand.mark(kind:"single")。
+		// 正经占槽位,替掉原来的 DOM 硬改 —— React 重渲染冲不掉组件,侧栏折叠态
+		// (railMark)那个渲染点也自动覆盖,而 DOM 兜底只能改到第一个命中的 svg。
+		function SidebarBrandMark({ size }) {
+			const s = Math.round(size || 24);
+			return React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", "data-dshwork-slot-mark": "true", style: { objectFit: "contain", display: "block" } });
 		}
 
 		function Icon({ kind }) {
@@ -383,11 +395,29 @@ window.__ModuleLoader__.load({
 		}
 
 		const inject = ["slots"];
+		// 单占位槽(kind:"single")上「同优先级重复注册」会抛错,而且会让**整条 loader entry 失败**
+		// —— 整个品牌插件一起挂掉。官方/第三方插件可能已经占着同一个槽,所以这里做两件事:
+		//   1) 用一个更低的 priority 去「遮蔽」已有占位(lowest renders),而不是同优先级硬撞;
+		//   2) 外面仍然包一层 try/catch —— 万一还撞上,只丢这一个占位,不让整个插件失效。
+		const SHADOW_PRIORITY = -1;
+		function safeRegister(ctx, options, Component) {
+			try {
+				return ctx.slots.register(options, Component);
+			} catch (err) {
+				try { console.warn("[dshwork-brand] slot register skipped:", options && options.name, err && err.message); } catch (_) { /* ignore */ }
+				return void 0;
+			}
+		}
 		function apply(ctx) {
-			ctx.slots.inject("conversation.hero.brand.mark", () => ctx.slots.register({ name: "conversation.hero.brand.mark" }, BrandMark));
-			ctx.slots.inject("sidebar.footer.action", () => ctx.slots.register({ name: "sidebar.footer.action", id: "dshwork-entries" }, FooterAction));
-			ctx.slots.inject("shell.overlay", () => ctx.slots.register({ name: "shell.overlay", id: "dshwork-entries" }, Overlay));
-			ctx.slots.inject("conversation.session.header.corner", () => ctx.slots.register({ name: "conversation.session.header.corner", id: "dshwork-corner" }, Corner));
+			// 侧栏品牌 mark:官方 dsh-client-ui-brand-official 在 priority 0 占着同一个
+			// 槽(kind:"single"),我们以 -1 遮蔽它(lowest renders)即可 —— 不需要禁用
+			// 官方那一行,因为品牌名 sidebar.brand.name 要保留官方字标原样不动。
+			ctx.slots.inject("sidebar.brand.mark", () => safeRegister(ctx, { name: "sidebar.brand.mark", priority: SHADOW_PRIORITY }, SidebarBrandMark));
+			// 侧栏品牌名(sidebar.brand.name)刻意不占位:保留官方的 "deepseek HARNESS" 字标。
+			ctx.slots.inject("conversation.hero.brand.mark", () => safeRegister(ctx, { name: "conversation.hero.brand.mark", priority: SHADOW_PRIORITY }, BrandMark));
+			ctx.slots.inject("sidebar.footer.action", () => safeRegister(ctx, { name: "sidebar.footer.action", id: "dshwork-entries" }, FooterAction));
+			ctx.slots.inject("shell.overlay", () => safeRegister(ctx, { name: "shell.overlay", id: "dshwork-entries" }, Overlay));
+			ctx.slots.inject("conversation.session.header.corner", () => safeRegister(ctx, { name: "conversation.session.header.corner", id: "dshwork-corner" }, Corner));
 		}
 
 		exports.BrandMark = BrandMark;

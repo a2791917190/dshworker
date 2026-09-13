@@ -16,6 +16,8 @@ const {
   getHarnessUrl,
   getHarnessToken,
   readHarnessUrlToken,
+  webArgs,
+  webArgsFor,
   BUNDLED_HARNESS_VERSION
 } = require('../src/main/harness');
 
@@ -151,6 +153,33 @@ async function main() {
       if (prev === undefined) delete process.env.DSHWORK_HARNESS_DIR;
       else process.env.DSHWORK_HARNESS_DIR = prev;
     }
+  });
+
+  // ---- webArgs:拉起 harness 的参数 ----
+  // 回归守卫:桌面端自己用 Electron 窗口承载 UI,绝不能漏掉 --no-open,
+  // 否则 harness 会额外弹一个系统浏览器页面。
+  await ok('webArgs always passes --no-open', () => {
+    const args = webArgs();
+    assert.strictEqual(args[0], 'web', 'first arg is the web subcommand');
+    assert.ok(args.includes('--no-open'), `expected --no-open in ${JSON.stringify(args)}`);
+  });
+
+  await ok('webArgsFor derives host and port from the URL', () => {
+    assert.deepStrictEqual(webArgsFor('http://127.0.0.1:3080'), ['web', '--no-open', '--host', '127.0.0.1', '--port', '3080']);
+    // 关键:DSHWORK_HARNESS_URL 覆盖端口时,harness 必须被拉到同一个端口
+    assert.deepStrictEqual(webArgsFor('http://127.0.0.1:3081'), ['web', '--no-open', '--host', '127.0.0.1', '--port', '3081']);
+    assert.deepStrictEqual(webArgsFor('http://127.0.0.1:3199'), ['web', '--no-open', '--host', '127.0.0.1', '--port', '3199']);
+  });
+
+  await ok('webArgsFor tolerates a URL without an explicit port', () => {
+    const args = webArgsFor('http://localhost');
+    assert.strictEqual(args[0], 'web');
+    assert.ok(args.includes('--no-open'));
+    assert.ok(!args.includes('--port'), 'no port flag when the URL has none');
+  });
+
+  await ok('webArgsFor survives a malformed URL', () => {
+    assert.deepStrictEqual(webArgsFor('not a url'), ['web', '--no-open']);
   });
 
   console.log(`\n${passed} tests passed.`);

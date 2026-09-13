@@ -45,6 +45,39 @@ const HARNESS_NPM_PKG = '@deepseek-ai/dsh';
 const BUNDLED_HARNESS_VERSION =
   process.env.DSHWORK_HARNESS_VERSION || require('../../config/harness.json').bundledVersion;
 
+/** 等 auth token 打印出来:20 × 250ms = 5s 上限。 */
+const TOKEN_WAIT_TRIES = 20;
+const TOKEN_WAIT_INTERVAL_MS = 250;
+
+/**
+ * 拉起 harness 时传给 `dsh` 的参数。
+ *
+ *  - `--no-open`:桌面端自己用 Electron 窗口承载这份 Web UI,不需要 harness 再弹一个
+ *    系统浏览器。官方 `dsh web` 默认会打开默认浏览器 —— 那正是"桌面端之外又多出一个
+ *    网页"的来源(客户端不自带窗口时才需要它)。
+ *  - `--host/--port`:跟随 HARNESS_URL。否则即使设了 `DSHWORK_HARNESS_URL`,harness
+ *    仍在默认 3080 监听,而我们却在等另一个端口,永远等不到。
+ *
+ * @param {string} harnessUrl - 目标 harness 地址(通常是 HARNESS_URL)。
+ * @returns {string[]} 子命令及其参数。
+ */
+function webArgsFor(harnessUrl) {
+  const args = ['web', '--no-open'];
+  try {
+    const url = new URL(harnessUrl);
+    if (url.hostname) args.push('--host', url.hostname);
+    if (url.port) args.push('--port', url.port);
+  } catch (_) {
+    // 不是合法 URL:交给 harness 用它自己的默认值。
+  }
+  return args;
+}
+
+/** {@link webArgsFor} 绑定到当前 HARNESS_URL。 */
+function webArgs() {
+  return webArgsFor(HARNESS_URL);
+}
+
 // harness 网页有 auth fence:`dsh web` 启动时会打印带 `?token=` 的 URL,
 // 客户端必须带该 token 打开网页,否则被拦("dsh web authentication required")。
 // 捕获 harness stdout 提取 token,打开窗口时带上。
@@ -445,21 +478,33 @@ async function bootHarness(mode = 'bundled', options = {}) {
   }
 
   // 从 harness 输出提取 auth token,窗口打开网页时带上(否则被 auth fence 拦截)。
+  //
+  // ⚠️ 这里有竞态:`dsh web` 是在**服务就绪那一刻**才打印那行带 token 的 URL,
+  // 而 `waitForUp` 在端口一有响应时就返回 —— 两者几乎同时,谁先到不确定。
+  // 内置 0.1.5 起回环访问也强制校验 token(裸访问 401),只读一次会随机白屏,
+  // 所以读不到就再等一会儿(最多 5s),仍然读不到才放弃(那时只能靠 web-url.txt)。
   harnessToken = extractToken(harnessOutput) || readHarnessUrlToken();
+  for (let i = 0; !harnessToken && up && i < TOKEN_WAIT_TRIES; i++) {
+    await new Promise((resolve) => setTimeout(resolve, TOKEN_WAIT_INTERVAL_MS));
+    harnessToken = extractToken(harnessOutput);
+  }
   if (harnessToken) log('[harness] captured harness auth token (len=' + harnessToken.length + ')');
+  else if (up) log('[harness] no auth token captured; window opens without one');
   return up;
 }
 
 /** 用用户已安装的 harness(全局 @deepseek-ai/dsh)的 bin 拉起。 */
 function spawnInstalledHarness(runtime, userDsh, onOutput) {
-  log('[harness] spawn user harness:', runtime.node, userDsh);
-  return spawnProcess(runtime.node, [userDsh, 'web'], { shell: false, onOutput });
+  const args = [userDsh, ...webArgs()];
+  log('[harness] spawn user harness:', runtime.node, args.join(' '));
+  return spawnProcess(runtime.node, args, { shell: false, onOutput });
 }
 
 /** 用内置的 harness(通过解析出的 node 运行其 bin 入口)。 */
 function spawnBundledHarness(runtime, bundled, onOutput) {
-  log('[harness] spawn bundled harness:', runtime.node, bundled.binPath);
-  return spawnProcess(runtime.node, [bundled.binPath, 'web'], { shell: false, onOutput });
+  const args = [bundled.binPath, ...webArgs()];
+  log('[harness] spawn bundled harness:', runtime.node, args.join(' '));
+  return spawnProcess(runtime.node, args, { shell: false, onOutput });
 }
 
 /** 用解析出的 node 自带的 npx 拉起 harness。可传固定版本标签,不传则取最新版。 */
@@ -474,7 +519,7 @@ function spawnNpxHarness(runtime, pinnedVersion, onOutput) {
   // 允许用环境变量指定 npm 镜像(如 npmmirror),绕过 registry.npmjs.org 阻断。
   const registry = process.env.DSHWORK_NPM_REGISTRY;
   if (registry) args.push('--registry', registry);
-  args.push(pkg, 'web');
+  args.push(pkg, ...webArgs());
   log('[harness] spawn npx:', exe, args.join(' '));
   return spawnProcess(exe, args, { shell, onOutput });
 }
@@ -542,6 +587,8 @@ module.exports = {
   HARNESS_URL,
   HARNESS_NPM_PKG,
   BUNDLED_HARNESS_VERSION,
+  webArgs,
+  webArgsFor,
   getLatestVersion,
   findBundledHarness,
   resolveHarnessVersion,

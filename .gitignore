@@ -15,7 +15,13 @@ latest.yml
 builder-debug.yml
 
 # ---- 内置运行时(构建期由 vendor 生成,巨大,不入库) ----
+# 只忽略「内容」、保留 README 占位:package.json 的 extraResources 引用这两个目录,
+# 干净检出(如 CI)时目录必须存在,否则构建会因找不到来源而失败。
 desktop/vendor/dsh/node_modules/
+desktop/vendor/harness/*
+!desktop/vendor/harness/README.md
+desktop/vendor/node/*
+!desktop/vendor/node/README.md
 resources/node/
 resources/vendor/harness/
 desktop/runtime/

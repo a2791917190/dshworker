@@ -12,6 +12,7 @@
   },
   "scripts": {
     "start": "electron .",
+    "icons": "node scripts/make-app-icons.cjs",
     "build:win": "electron-builder --win nsis --x64",
     "build:mac": "electron-builder --mac",
     "build:mac:cross": "electron-builder --mac zip",
@@ -33,12 +34,21 @@
     "files": [
       "src/**/*",
       "config/**",
-      "package.json"
+      "package.json",
+      "assets/icons/icon.ico"
     ],
     "extraResources": [
       {
         "from": "vendor",
         "to": "vendor",
+        "filter": [
+          "**/*",
+          "!node/**"
+        ]
+      },
+      {
+        "from": "vendor/node",
+        "to": "node",
         "filter": ["**/*"]
       },
       {

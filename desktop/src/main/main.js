@@ -12,6 +12,7 @@
 
 const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { registerProtocol } = require('./protocol');
 const { createTray } = require('./tray');
 const { promptHarnessUpdate, setupUpdater } = require('./updater');
@@ -103,6 +104,10 @@ function getCurrentVersionLabel() {
 }
 
 function createWindow() {
+  // 窗口/任务栏图标。打包后 Windows 本来就用 exe 内嵌的图标,这里主要是让
+  // `npm start` 开发态也显示自己的 logo(否则是 Electron 默认图标)。
+  // assets/ 只有 icon.ico 进了 asar 的 files 列表;缺失时不传该字段,避免启动告警。
+  const iconPath = path.join(__dirname, '..', '..', 'assets', 'icons', 'icon.ico');
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -111,6 +116,7 @@ function createWindow() {
     title: 'DSHwork',
     backgroundColor: '#04070f',
     show: false,
+    ...(fs.existsSync(iconPath) ? { icon: iconPath } : {}),
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),
       contextIsolation: true,

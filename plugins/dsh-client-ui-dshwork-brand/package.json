@@ -3,6 +3,10 @@
   "description": "DSHwork brand surface: replaces the harness brand marks (hero + sidebar) with the dshwork logo, and adds Plugins/Skills sidebar entries with built-in content.",
   "version": "0.1.0",
   "type": "module",
+  "scripts": {
+    "build": "node build-client.cjs",
+    "test": "node test/slot-registration.test.cjs"
+  },
   "main": "lib/index.js",
   "exports": {
     ".": {

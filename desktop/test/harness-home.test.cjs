@@ -12,7 +12,7 @@ const os = require('os');
 const path = require('path');
 
 const { findInstalledDsh } = require('../src/main/harness');
-const { ensureDedicatedHome, globalDshHome, dedicatedHome, copyCredentials } = require('../src/main/dsh-home');
+const { ensureDedicatedHome, globalDshHome, dedicatedHome, copyCredentials, shareUserData } = require('../src/main/dsh-home');
 
 function tmpdir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -124,6 +124,108 @@ async function run() {
         if (prevHome === undefined) delete process.env.DSH_HOME;
         else process.env.DSH_HOME = prevHome;
       }
+    }],
+    ['shareUserData links data dirs into the private home', () => {
+      const globalHome = track(tmpdir('dshwork-share-src-'));
+      const privateHome = track(tmpdir('dshwork-share-dst-'));
+      fs.mkdirSync(path.join(globalHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(globalHome, 'sessions', 'a.jsonl'), '{"t":1}\n');
+      fs.writeFileSync(path.join(globalHome, '.credentials.yaml'), 'api: shared\n');
+      const res = shareUserData(privateHome, globalHome);
+      assert.ok(res.dirs >= 1, 'at least sessions linked');
+      assert.ok(res.files >= 1, 'at least credentials linked');
+      // 通过私有 home 能直接读到全局的数据
+      assert.strictEqual(fs.readFileSync(path.join(privateHome, 'sessions', 'a.jsonl'), 'utf8'), '{"t":1}\n');
+      assert.strictEqual(fs.readFileSync(path.join(privateHome, '.credentials.yaml'), 'utf8'), 'api: shared\n');
+    }],
+    ['shareUserData writes the newer private config back to the global home', () => {
+      const globalHome = track(tmpdir('dshwork-sync-src-'));
+      const privateHome = track(tmpdir('dshwork-sync-dst-'));
+      const g = path.join(globalHome, 'settings.yaml');
+      const p = path.join(privateHome, 'settings.yaml');
+      fs.writeFileSync(g, 'old: 1\n');
+      fs.writeFileSync(p, 'new: 2\n');
+      const past = new Date(Date.now() - 60000);
+      fs.utimesSync(g, past, past); // 全局侧更旧
+      shareUserData(privateHome, globalHome);
+      assert.strictEqual(fs.readFileSync(g, 'utf8'), 'new: 2\n', 'newer private value wins');
+    }],
+    ['shareUserData keeps an existing newer global config', () => {
+      const globalHome = track(tmpdir('dshwork-keep-src-'));
+      const privateHome = track(tmpdir('dshwork-keep-dst-'));
+      const g = path.join(globalHome, 'settings.yaml');
+      const p = path.join(privateHome, 'settings.yaml');
+      fs.writeFileSync(g, 'global: keep\n');
+      fs.writeFileSync(p, 'stale: drop\n');
+      const past = new Date(Date.now() - 60000);
+      fs.utimesSync(p, past, past); // 私有侧更旧
+      shareUserData(privateHome, globalHome);
+      assert.strictEqual(fs.readFileSync(g, 'utf8'), 'global: keep\n', 'newer global value kept');
+    }],
+    ['ensureDedicatedHome makes sessions visible through the private home', () => {
+      const globalHome = track(tmpdir('dshwork-share-global-'));
+      fs.mkdirSync(path.join(globalHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(globalHome, 'sessions', 's.jsonl'), 'x\n');
+      const base = track(tmpdir('dshwork-share-appdata-'));
+      const prev = process.env.DSH_HOME;
+      process.env.DSH_HOME = globalHome;
+      try {
+        ensureDedicatedHome(base);
+        assert.ok(fs.existsSync(path.join(base, 'dsh-home', 'sessions', 's.jsonl')), 'sessions visible through the private home');
+      } finally {
+        if (prev === undefined) delete process.env.DSH_HOME;
+        else process.env.DSH_HOME = prev;
+      }
+    }],
+    ['shareUserData writes through: a private write lands in the global home', () => {
+      const globalHome = track(tmpdir('dshwork-wt-src-'));
+      const privateHome = track(tmpdir('dshwork-wt-dst-'));
+      fs.mkdirSync(path.join(globalHome, 'sessions'), { recursive: true });
+      shareUserData(privateHome, globalHome);
+      fs.writeFileSync(path.join(privateHome, 'sessions', 'new.jsonl'), 'hello\n');
+      assert.strictEqual(fs.readFileSync(path.join(globalHome, 'sessions', 'new.jsonl'), 'utf8'), 'hello\n', 'write visible in the global home');
+    }],
+    ['shareUserData merges a pre-existing private dir, then links it', () => {
+      const globalHome = track(tmpdir('dshwork-mg-src-'));
+      const privateHome = track(tmpdir('dshwork-mg-dst-'));
+      fs.mkdirSync(globalHome, { recursive: true });
+      fs.mkdirSync(path.join(privateHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(privateHome, 'sessions', 'legacy.jsonl'), 'legacy\n');
+      shareUserData(privateHome, globalHome);
+      assert.ok(fs.existsSync(path.join(globalHome, 'sessions', 'legacy.jsonl')), 'legacy data merged into the global home');
+      assert.ok(fs.lstatSync(path.join(privateHome, 'sessions')).isSymbolicLink(), 'now a link');
+    }],
+    ['shareUserData leaves a dir with leftovers alone rather than deleting it', () => {
+      const globalHome = track(tmpdir('dshwork-lf-src-'));
+      const privateHome = track(tmpdir('dshwork-lf-dst-'));
+      fs.mkdirSync(path.join(globalHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(globalHome, 'sessions', 'keep.jsonl'), 'GLOBAL\n');
+      fs.mkdirSync(path.join(privateHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(privateHome, 'sessions', 'keep.jsonl'), 'PRIVATE\n');
+      shareUserData(privateHome, globalHome);
+      const p = path.join(privateHome, 'sessions');
+      assert.ok(!fs.lstatSync(p).isSymbolicLink(), 'not replaced by a link');
+      assert.strictEqual(fs.readFileSync(path.join(p, 'keep.jsonl'), 'utf8'), 'PRIVATE\n', 'private copy untouched');
+      assert.strictEqual(fs.readFileSync(path.join(globalHome, 'sessions', 'keep.jsonl'), 'utf8'), 'GLOBAL\n', 'global copy untouched');
+    }],
+    ['shareUserData creates the shared dirs even without a global home (documented side effect)', () => {
+      const globalHome = track(tmpdir('dshwork-fresh-src-'));
+      const privateHome = track(tmpdir('dshwork-fresh-dst-'));
+      const res = shareUserData(privateHome, globalHome);
+      assert.strictEqual(res.dirs, 4, 'all four data dirs linked');
+      for (const d of ['sessions', 'storages', 'attachments', 'skills']) {
+        assert.ok(fs.existsSync(path.join(globalHome, d)), `${d} created on the global side`);
+      }
+      assert.ok(!fs.existsSync(path.join(globalHome, 'settings.yaml')), 'no config file invented');
+    }],
+    ['fs.rmSync does not follow a junction (cleanup stays safe)', () => {
+      const globalHome = track(tmpdir('dshwork-rm-src-'));
+      const privateHome = track(tmpdir('dshwork-rm-dst-'));
+      fs.mkdirSync(path.join(globalHome, 'sessions'), { recursive: true });
+      fs.writeFileSync(path.join(globalHome, 'sessions', 'precious.jsonl'), 'DATA\n');
+      shareUserData(privateHome, globalHome);
+      fs.rmSync(privateHome, { recursive: true, force: true });
+      assert.ok(fs.existsSync(path.join(globalHome, 'sessions', 'precious.jsonl')), 'target survived recursive removal');
     }]
   ];
 

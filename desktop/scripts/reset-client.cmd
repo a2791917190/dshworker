@@ -23,8 +23,18 @@ echo      (已尝试结束;若仍有卡住的窗口,请到"任务管理器"手�
 
 echo.
 echo [2/3] 删除 DSHwork 客户端数据目录...
-if exist "%LOCALAPPDATA%\dshwork\dsh-home" rmdir /s /q "%LOCALAPPDATA%\dshwork\dsh-home"
-if exist "%APPDATA%\dshwork\dsh-home" rmdir /s /q "%APPDATA%\dshwork\dsh-home"
+rem  注意:私有 home 里现在有指向用户真实 ~/.dsh 的目录链接
+rem  (sessions / storages / attachments / skills)。Windows 的 rmdir /s 会
+rem  **穿透 junction** 把目标内容一起删掉 —— 所以这里改用 Node 脚本,只摘链接、不跟随。
+where node >nul 2>&1
+if errorlevel 1 (
+  echo      [跳过] 本机没找到 node,无法安全删除。
+  echo      请勿直接 rmdir /s ^(那会穿透 junction 删掉 ~/.dsh 里的真实数据^)。
+  echo      手动做法:进入 dsh-home,先删掉 sessions / storages / attachments /
+  echo      skills 这几个"快捷方式",再删整个目录。
+) else (
+  node "%~dp0reset-dsh-home.cjs"
+)
 echo      已删除(若以后想保留模型凭据,可先备份)
 echo      (如果你想同时清掉全局 ~/.dsh 里的 DSHwork profile,请手动删除
 echo       %USERPROFILE%\.dsh\profiles\web 与 %USERPROFILE%\.dsh\profiles\node_modules)
