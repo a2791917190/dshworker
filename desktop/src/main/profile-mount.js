@@ -29,6 +29,26 @@ const { log } = require('./log');
 
 const PLUGIN_NAME = '@deepseek-ai/dsh-client-ui-dshwork';
 
+/**
+ * 客户端**自己的** profile 名。
+ *
+ * 为什么要跟 CLI 分开:CLI 的 `dsh web` 写死用 `profiles/web`,而客户端要挂品牌插件。
+ * 如果挂在同一个 profile 里,用户**用常规方式打开也会变成 dshwork 界面**,还会改写他
+ * 原有的 profile。所以客户端用独立 profile:
+ *
+ *   数据($DSH_HOME 层)       → 共享(会话/设置/凭据/工作区)
+ *   profile(插件集、可执行包) → 分开   `profiles/web`(CLI) vs `profiles/dshwork`(客户端)
+ *
+ * 这也是官方桌面端的做法(Electron 独占 `$DSH_HOME/profiles/desktop`,CLI 不得改动)。
+ */
+const CLIENT_PROFILE_NAME = 'dshwork';
+
+/** CLI `dsh web` 使用的 profile(保持原样,客户端不碰它)。 */
+const CLI_PROFILE_NAME = 'web';
+
+/** 需要 web 界面的 profile:CLI 的 web 与客户端的 dshwork 都要装 dsh-web-app。 */
+const WEB_PROFILE_BUNDLES = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'];
+
 // ---------------------------------------------------------------------------
 // 路径解析
 // ---------------------------------------------------------------------------
@@ -38,7 +58,7 @@ function dshHome() {
 }
 
 function defaultProfileName() {
-  return process.env.DSHWORK_HARNESS_PROFILE || 'web';
+  return process.env.DSHWORK_HARNESS_PROFILE || CLIENT_PROFILE_NAME;
 }
 
 function profileDirFor(name, home = dshHome()) {
@@ -176,29 +196,40 @@ function addBundleToProfile(profileDir, pluginDir) {
  * @param {string} profileDir - profile 目录。
  * @returns {boolean} 是否成功(至少改了 package.json)。
  */
-function removeWorkbenchMounted(profileDir) {
+/**
+ * 从 profile 里移除某个插件包(通用实现):
+ *   - 从 `dsh.profile.bundles` 与 `dependencies` 里删掉;
+ *   - 删除 profile 的 node_modules 与共享 flat-fallback 里的该包。
+ * 幂等:不存在则原样返回 false。
+ * @param {string} profileDir - profile 目录。
+ * @param {string} packageName - 包名(可带 scope,如 `@dshwork/xxx`)。
+ * @param {string} label - 日志用标签。
+ * @returns {boolean} 是否有改动。
+ */
+function removePluginMounted(profileDir, packageName, label) {
   const pkgPath = path.join(profileDir, 'package.json');
   let changed = false;
   try {
     if (fs.existsSync(pkgPath)) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      if (pkg.dependencies && pkg.dependencies[PLUGIN_NAME]) {
-        delete pkg.dependencies[PLUGIN_NAME];
+      if (pkg.dependencies && pkg.dependencies[packageName]) {
+        delete pkg.dependencies[packageName];
         changed = true;
       }
-      if (pkg.dsh && pkg.dsh.profile && Array.isArray(pkg.dsh.profile.bundles) && pkg.dsh.profile.bundles.includes(PLUGIN_NAME)) {
-        pkg.dsh.profile.bundles = pkg.dsh.profile.bundles.filter((b) => b !== PLUGIN_NAME);
+      if (pkg.dsh && pkg.dsh.profile && Array.isArray(pkg.dsh.profile.bundles) && pkg.dsh.profile.bundles.includes(packageName)) {
+        pkg.dsh.profile.bundles = pkg.dsh.profile.bundles.filter((b) => b !== packageName);
         changed = true;
       }
       if (changed) fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
     }
   } catch (err) {
-    log('[profile-mount] removeWorkbenchMounted(manifest) failed:', err && err.message);
+    log(`[profile-mount] remove${label}(manifest) failed:`, err && err.message);
   }
   // 删除 profile node_modules 里的插件包(可能是真实目录或 link)。
+  const segments = packageName.split('/');
   const locations = [
-    path.join(profileDir, 'node_modules', '@deepseek-ai', 'dsh-client-ui-dshwork'),
-    path.join(dshHome(), 'profiles', 'node_modules', '@deepseek-ai', 'dsh-client-ui-dshwork')
+    path.join(profileDir, 'node_modules', ...segments),
+    path.join(dshHome(), 'profiles', 'node_modules', ...segments)
   ];
   for (const loc of locations) {
     try {
@@ -207,10 +238,24 @@ function removeWorkbenchMounted(profileDir) {
         changed = true;
       }
     } catch (err) {
-      log('[profile-mount] removeWorkbenchMounted(unlink) failed:', err && err.message);
+      log(`[profile-mount] remove${label}(unlink) failed:`, err && err.message);
     }
   }
   return changed;
+}
+
+/** 撤销工作台插件挂载(还原用户原有 harness profile)。 */
+function removeWorkbenchMounted(profileDir) {
+  return removePluginMounted(profileDir, PLUGIN_NAME, 'WorkbenchMounted');
+}
+
+/**
+ * 撤销品牌插件挂载。
+ * 主要用途:早期版本把品牌插件挂进了**共享的** `profiles/web`,客户端改用独立 profile
+ * 之后要把它清掉,让用户用常规方式(`dsh web`)打开时回到原生 harness 界面。
+ */
+function removeBrandMounted(profileDir) {
+  return removePluginMounted(profileDir, BRAND_PLUGIN_NAME, 'BrandMounted');
 }
 
 /**
@@ -244,7 +289,9 @@ function mountState(profileDir) {
 function createProfile(profileDir, profileName) {
   const pkgPath = path.join(profileDir, 'package.json');
   if (fs.existsSync(pkgPath)) return false;
-  const bundles = profileName === 'web' ? ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'] : ['@deepseek-ai/dsh-base'];
+  const bundles = (profileName === CLI_PROFILE_NAME || profileName === CLIENT_PROFILE_NAME)
+    ? [...WEB_PROFILE_BUNDLES]
+    : ['@deepseek-ai/dsh-base'];
   try {
     fs.mkdirSync(profileDir, { recursive: true });
     const manifest = { name: `dsh-profile-${profileName}`, private: true, dependencies: {}, dsh: { profile: { bundles } } };
@@ -399,6 +446,8 @@ module.exports = {
   resolvePluginDir,
   toForwardSlashes,
   BRAND_PLUGIN_NAME,
+  CLIENT_PROFILE_NAME,
+  CLI_PROFILE_NAME,
   resolveBrandDir,
   ensureBrandMounted,
   mountState,
@@ -406,6 +455,7 @@ module.exports = {
   installByCopy,
   addBundleToProfile,
   removeWorkbenchMounted,
+  removeBrandMounted,
   ensureWorkbenchMounted,
   findSystemNode
 };

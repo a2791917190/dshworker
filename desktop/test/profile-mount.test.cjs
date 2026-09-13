@@ -16,12 +16,17 @@ const path = require('path');
 
 const {
   PLUGIN_NAME,
+  BRAND_PLUGIN_NAME,
+  CLIENT_PROFILE_NAME,
+  defaultProfileName,
+  createProfile,
   profileDirFor,
   resolvePluginDir,
   toForwardSlashes,
   mountState,
   ensureWorkbenchMounted,
-  removeWorkbenchMounted
+  removeWorkbenchMounted,
+  removeBrandMounted
 } = require('../src/main/profile-mount');
 
 // -- 临时 DSH_HOME ----------------------------------------------------------
@@ -163,6 +168,43 @@ async function run() {
       assert.strictEqual(res.reason, 'disabled');
       if (prev === undefined) delete process.env.DSHWORK_AUTO_MOUNT;
       else process.env.DSHWORK_AUTO_MOUNT = prev;
+    }],
+    ['defaultProfileName uses the client profile, not the CLI one', () => {
+      const prev = process.env.DSHWORK_HARNESS_PROFILE;
+      delete process.env.DSHWORK_HARNESS_PROFILE;
+      try {
+        // 关键:客户端不能用 profiles/web,否则 `dsh web` 也会带上 dshwork 界面
+        assert.strictEqual(defaultProfileName(), 'dshwork');
+        assert.strictEqual(defaultProfileName(), CLIENT_PROFILE_NAME);
+        process.env.DSHWORK_HARNESS_PROFILE = 'custom';
+        assert.strictEqual(defaultProfileName(), 'custom', 'env override still wins');
+      } finally {
+        if (prev === undefined) delete process.env.DSHWORK_HARNESS_PROFILE;
+        else process.env.DSHWORK_HARNESS_PROFILE = prev;
+      }
+    }],
+    ['createProfile gives the client profile the web bundles', () => {
+      const dir = profileDirFor('client-probe');
+      createProfile(dir, CLIENT_PROFILE_NAME);
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+      assert.ok(pkg.dsh.profile.bundles.includes('@deepseek-ai/dsh-web-app'), 'client profile must serve the web UI');
+      assert.ok(pkg.dsh.profile.bundles.includes('@deepseek-ai/dsh-base'));
+    }],
+    ['removeBrandMounted strips the brand plugin from a shared profiles/web', () => {
+      const dir = makeProfile('legacy-web', {
+        bundles: ['@deepseek-ai/dsh-base', BRAND_PLUGIN_NAME],
+        deps: { [BRAND_PLUGIN_NAME]: 'link:x' }
+      });
+      const installed = path.join(dir, 'node_modules', '@dshwork', 'dsh-client-ui-dshwork-brand');
+      fs.mkdirSync(installed, { recursive: true });
+      fs.writeFileSync(path.join(installed, 'package.json'), '{}', 'utf8');
+
+      assert.strictEqual(removeBrandMounted(dir), true, 'should report changes');
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+      assert.ok(!pkg.dsh.profile.bundles.includes(BRAND_PLUGIN_NAME), 'removed from bundles');
+      assert.ok(!pkg.dependencies[BRAND_PLUGIN_NAME], 'removed from dependencies');
+      assert.ok(!fs.existsSync(installed), 'plugin dir deleted');
+      assert.strictEqual(removeBrandMounted(dir), false, 'idempotent on a second run');
     }]
   ];
 

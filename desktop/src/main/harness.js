@@ -29,10 +29,12 @@ const { ensureNodeRuntime, findSystemNode } = require('./node-runtime');
 const {
   ensureWorkbenchMounted,
   removeWorkbenchMounted,
+  removeBrandMounted,
   ensureBrandMounted,
   profileDirFor,
   defaultProfileName,
-  resolveDshBin
+  resolveDshBin,
+  CLI_PROFILE_NAME
 } = require('./profile-mount');
 const { ensureDedicatedHome } = require('./dsh-home');
 const { installBundledSkills } = require('./skills');
@@ -52,6 +54,9 @@ const TOKEN_WAIT_INTERVAL_MS = 250;
 /**
  * 拉起 harness 时传给 `dsh` 的参数。
  *
+ *  - `--profile <name>`:显式指定 profile。**不能用 `web` 子命令** —— 它是
+ *    `--profile web` 的别名,写死指向 `profiles/web`;客户端要用自己的 profile
+ *    (默认 `dshwork`),这样 `dsh web` 打开时仍是原生 harness 界面。
  *  - `--no-open`:桌面端自己用 Electron 窗口承载这份 Web UI,不需要 harness 再弹一个
  *    系统浏览器。官方 `dsh web` 默认会打开默认浏览器 —— 那正是"桌面端之外又多出一个
  *    网页"的来源(客户端不自带窗口时才需要它)。
@@ -59,10 +64,11 @@ const TOKEN_WAIT_INTERVAL_MS = 250;
  *    仍在默认 3080 监听,而我们却在等另一个端口,永远等不到。
  *
  * @param {string} harnessUrl - 目标 harness 地址(通常是 HARNESS_URL)。
- * @returns {string[]} 子命令及其参数。
+ * @param {string} [profileName] - 要启动的 profile(默认 'web')。
+ * @returns {string[]} 参数列表(不含 dsh 入口)。
  */
-function webArgsFor(harnessUrl) {
-  const args = ['web', '--no-open'];
+function webArgsFor(harnessUrl, profileName) {
+  const args = ['--profile', profileName || CLI_PROFILE_NAME, '--no-open'];
   try {
     const url = new URL(harnessUrl);
     if (url.hostname) args.push('--host', url.hostname);
@@ -73,9 +79,9 @@ function webArgsFor(harnessUrl) {
   return args;
 }
 
-/** {@link webArgsFor} 绑定到当前 HARNESS_URL。 */
+/** {@link webArgsFor} 绑定到当前 HARNESS_URL 与客户端 profile。 */
 function webArgs() {
-  return webArgsFor(HARNESS_URL);
+  return webArgsFor(HARNESS_URL, defaultProfileName());
 }
 
 // harness 网页有 auth fence:`dsh web` 启动时会打印带 `?token=` 的 URL,
@@ -399,29 +405,43 @@ async function bootHarness(mode = 'bundled', options = {}) {
     const mount = await ensureWorkbenchMounted({ node: runtime.node, dshBin: dshBin || undefined });
     log('[profile-mount] result:', mount ? (mount.ok ? 'mounted' : `not-mounted:${mount.reason}`) : 'skipped');
   } else {
-    // 清掉当前 home 的 profile,以及全局 ~/.dsh 里可能被旧版挂过的 profile,
-    // 保证页面回到原生 harness。
+    // 客户端使用**自己的 profile**(默认 `dshwork`),与 CLI 的 `profiles/web` 分开:
+    //   `dsh web`(常规方式) → 原生 harness 界面
+    //   客户端窗口           → dshwork 品牌界面
+    // 数据(会话/设置/凭据/工作区)仍在 $DSH_HOME 层共享,只有 profile(插件集与
+    // 可执行包)分开 —— 这也是官方桌面端的做法。
     const profileName = defaultProfileName();
-    const targets = [profileDirFor(profileName)];
-    try {
-      const globalProfile = path.join(os.homedir(), '.dsh', 'profiles', profileName);
-      if (!targets.includes(globalProfile)) targets.push(globalProfile);
-    } catch (_) {
-      /* ignore */
+    const clientDir = profileDirFor(profileName);
+    // 早期版本把品牌插件挂进了**共享的** profiles/web,要清掉,否则用户用常规方式
+    // 打开时仍会看到 dshwork 界面。(不存在则 no-op,不会创建任何东西。)
+    const legacyDirs = [];
+    for (const dir of [
+      profileDirFor(CLI_PROFILE_NAME),
+      path.join(os.homedir(), '.dsh', 'profiles', CLI_PROFILE_NAME)
+    ]) {
+      if (dir !== clientDir && !legacyDirs.includes(dir)) legacyDirs.push(dir);
     }
+
     let removedAny = false;
-    for (const dir of targets) {
+    for (const dir of [clientDir, ...legacyDirs]) {
       try {
         if (removeWorkbenchMounted(dir)) removedAny = true;
       } catch (err) {
         log('[profile-mount] unmount skipped for', dir, ':', err && err.message);
       }
     }
+    for (const dir of legacyDirs) {
+      try {
+        if (removeBrandMounted(dir)) log('[profile-mount] brand plugin removed from CLI profile:', dir);
+      } catch (err) {
+        log('[profile-mount] brand unmount skipped for', dir, ':', err && err.message);
+      }
+    }
     log('[profile-mount] native harness; workbench plugin unmounted:', removedAny ? 'yes' : 'nothing-to-remove');
-    // 随包内置的品牌/入口插件 -> 当前 profile(自定义 logo + 插件/技能入口 + 右上角)
+    // 随包内置的品牌/入口插件 -> **客户端自己的 profile**(自定义 logo + 插件/技能入口 + 右上角)
     try {
-      const r = ensureBrandMounted(profileDirFor(profileName));
-      log('[profile-mount] brand plugin mounted:', r && r.ok ? 'yes' : `no(${r && r.reason})`);
+      const r = ensureBrandMounted(clientDir);
+      log('[profile-mount] brand plugin mounted:', r && r.ok ? 'yes' : `no(${r && r.reason})`, '→', profileName);
     } catch (err) {
       log('[profile-mount] brand mount skipped:', err && err.message);
     }
