@@ -37,10 +37,27 @@ jobs:
         working-directory: desktop
         run: npm ci
 
-      # mac 版会在 afterPack 里自动 vendor mac node + mac harness(联网),
-      # 产出「离线自包含」的 mac zip + dmg;Windows 产出 NSIS 安装包。
-      # 统一用高内存避免 vendor 时 npm install OOM;并禁用 electron-builder 自动发布
-      # (发布由下面的 release 步骤完成,否则会因缺 GH_TOKEN 报错)。
+      # 内置运行时(node + harness)必须在**构建前**就位 —— extraResources 会把它打进
+      # 应用与安装包,这是「离线自包含」的唯一来源。构建之后再 vendor 是进不了安装包的
+      # (旧版把它塞在 afterPack 里,而且失败只打一句 warn,所以一直静默产出 thin 包)。
+      # 只忽略内容、保留 README 的 .gitignore 规则保证这两个目录在干净检出时也存在。
+      - name: Vendor bundled runtime (node + harness)
+        working-directory: desktop
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+          # 国内网络可取消注释换镜像(可选):
+          # DSHWORK_NODE_DIST_MIRROR: https://npmmirror.com/mirrors/node
+          # DSHWORK_NPM_REGISTRY: https://registry.npmmirror.com
+        run: node ../plugins/vendor-runtime.cjs --vendor-root vendor
+
+      # 没装全就直接失败,不要静默产出 thin 包。
+      - name: Verify bundled runtime
+        working-directory: desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "const fs=require('fs');const c=p=>fs.existsSync(p);const node=c('vendor/node/bin/node')||c('vendor/node/node.exe');const h=c('vendor/harness/node_modules/@deepseek-ai/dsh/package.json');console.log('内置 node:',node?'ok':'MISSING');console.log('内置 harness:',h?'ok':'MISSING');if(!node||!h){process.exit(1)}"
+
       - name: Build
         working-directory: desktop
         env:
@@ -48,8 +65,6 @@ jobs:
           # 国内网络可取消注释换镜像(可选):
           # ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
           # ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
-          # DSHWORK_NODE_DIST_MIRROR: https://npmmirror.com/mirrors/node
-          # DSHWORK_NPM_REGISTRY: https://registry.npmmirror.com
         run: ${{ matrix.build_script }} -- --publish never
 
       - name: Upload artifacts

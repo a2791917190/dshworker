@@ -12,6 +12,7 @@
  *   - 系统有 node + npm(用于 vendor 脚本)。
  */
 
+const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
@@ -29,6 +30,17 @@ exports.default = async function afterPackMac(context) {
   const appOutDir = context.appOutDir; // 例如 dist/mac/DSHwork.app 或 dist/mac-arm64/DSHwork.app
   const resources = path.join(appOutDir, 'Contents', 'Resources');
   const vendorScript = path.join(__dirname, '..', '..', 'plugins', 'vendor-runtime.cjs');
+
+  // 构建前已经 vendor 过时(desktop/vendor/{node,harness} 经 extraResources 打进 Resources),
+  // 这里什么都不用做 —— 重复下载 node、重装 harness 只会拖慢构建,还可能覆盖已就位的版本。
+  // (CI 用的是「构建前 vendor + 校验」,所以正常路径都会命中这里。)
+  const alreadyVendored =
+    fs.existsSync(path.join(resources, 'vendor', 'harness', 'node_modules', '@deepseek-ai', 'dsh', 'package.json')) &&
+    fs.existsSync(path.join(resources, 'node', 'bin', 'node'));
+  if (alreadyVendored) {
+    console.log('[after-pack-mac] 内置运行时已随 extraResources 打入,跳过重复 vendoring');
+    return;
+  }
 
   console.log('[after-pack-mac] vendoring mac node + harness into', resources);
 

@@ -42,6 +42,7 @@ function parseArgs(argv) {
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--resources') o.resources = argv[++i];
+    else if (a === '--vendor-root') o.vendorRoot = argv[++i];
     else if (a === '--node-version') o.nodeVersion = argv[++i];
     else if (a === '--harness-version') o.harnessVersion = argv[++i];
     else if (a === '--node-mirror') o.nodeMirror = argv[++i];
@@ -157,10 +158,25 @@ async function vendorNode(args, resources) {
 
 function vendorHarness(args, resources) {
   const version = args.harnessVersion || configHarness().bundledVersion || '0.1.1-rc.2';
-  const prefix = path.join(resources, 'vendor', 'harness');
+  const prefix = path.join(resources, args.harnessSubdir || path.join('vendor', 'harness'));
   const nm = path.join(prefix, 'node_modules');
   const dshPkg = path.join(nm, HARNESS_PKG, 'package.json');
   fs.mkdirSync(prefix, { recursive: true });
+
+  // 已就绪且版本一致 → 跳过(与 vendorNode 行为一致),避免每次构建都重装一遍。
+  // 版本不一致时照常重装,防止沿用陈旧的内置 harness。
+  try {
+    if (fs.existsSync(dshPkg)) {
+      const installed = JSON.parse(fs.readFileSync(dshPkg, 'utf8')).version;
+      if (installed === version) {
+        console.log(`  ✓ harness 已就绪(v${installed}) — 跳过`);
+        return;
+      }
+      console.log(`  • 内置 harness 版本不一致(现有 v${installed},目标 v${version})→ 重装`);
+    }
+  } catch (_) {
+    /* 读不出来就当没装,继续走安装流程 */
+  }
 
   const registry = args.npmRegistry || process.env.DSHWORK_NPM_REGISTRY;
 
@@ -273,6 +289,8 @@ async function main() {
   if (args.help) {
     console.log('vendor-runtime.cjs — 把 node + harness vendor 进客户端(离线自包含)');
     console.log('  --resources <dir>       resources 目录(默认 <desktop>/dist/win-unpacked/resources)');
+    console.log('  --vendor-root <dir>     构建前模式:直接产出 extraResources 的源布局');
+    console.log('                            <dir>/node + <dir>/harness(隐含 --no-zip)');
     console.log('  --node-version <v>      内置 node 版本(默认取 config/harness.json)');
     console.log('  --harness-version <v>   内置 harness 版本(默认取 config/harness.json)');
     console.log('  --node-mirror <url>     node 分发镜像,如 https://npmmirror.com/mirrors/node');
@@ -282,7 +300,16 @@ async function main() {
     return;
   }
 
-  const resources = args.resources || path.join(DESKTOP, 'dist', 'win-unpacked', 'resources');
+  let resources = args.resources || path.join(DESKTOP, 'dist', 'win-unpacked', 'resources');
+  if (args.vendorRoot) {
+    // 构建前模式:内置运行时必须在 electron-builder 之前就位,否则进不了安装包/zip
+    // (extraResources 的源就是这两个目录,见 desktop/package.json)。
+    //   <vendorRoot>/node    → 打包后 resources/node
+    //   <vendorRoot>/harness → 打包后 resources/vendor/harness
+    resources = args.vendorRoot;
+    args.harnessSubdir = 'harness';
+    args.noZip = true; // 这里没有已打包的 app 目录可压缩
+  }
   console.log('resources 目标:', resources);
 
   if (!args.skipNode) await vendorNode(args, resources);
@@ -290,11 +317,26 @@ async function main() {
 
   console.log('\n验证:');
   const nodeExe = process.platform === 'win32' ? 'node.exe' : path.join('bin', 'node');
-  console.log('  node  :', fs.existsSync(path.join(resources, 'node', nodeExe)) ? 'ok' : 'MISSING');
-  console.log('  harness:', fs.existsSync(path.join(resources, 'vendor', 'harness', 'node_modules', HARNESS_PKG, 'package.json')) ? 'ok' : 'MISSING');
+  const harnessRel = path.join(
+    args.harnessSubdir || path.join('vendor', 'harness'),
+    'node_modules', HARNESS_PKG, 'package.json'
+  );
+  const nodeOk = fs.existsSync(path.join(resources, 'node', nodeExe));
+  const harnessOk = fs.existsSync(path.join(resources, harnessRel));
+  console.log('  node  :', nodeOk ? 'ok' : 'MISSING');
+  console.log('  harness:', harnessOk ? 'ok' : 'MISSING');
+  if (!nodeOk || !harnessOk) {
+    // 响亮地失败:否则会静默产出 thin 包(目标机器需要自带 node / 能联网),
+    // 「离线自包含」就成了纸面承诺。
+    throw new Error('内置运行时没装全 —— 继续下去只会得到 thin 包');
+  }
 
   rezip(args, resources);
-  console.log('\n完成。请把新的 zip 拿到无 node / 无 harness 的机器上测试。');
+  if (args.vendorRoot) {
+    console.log(`\n完成。内置运行时已写入 ${resources} —— electron-builder 会按 extraResources 打进应用。`);
+  } else {
+    console.log('\n完成。请把新的 zip 拿到无 node / 无 harness 的机器上测试。');
+  }
 }
 
 main().catch((err) => {
