@@ -10,7 +10,7 @@
  *  - 托盘、自动更新
  */
 
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { registerProtocol } = require('./protocol');
@@ -52,6 +52,9 @@ if (!gotSingleInstanceLock) {
 
 async function onReady() {
   registerProtocol(DEEP_LINK_SCHEME, dispatchDeepLink);
+  // 去掉 Electron 默认菜单栏(File/Edit/View/Window/Help)那一行。
+  // macOS 的菜单在系统菜单栏、且 Cmd+Q / Cmd+C 等快捷键由它提供,故只对 Windows/Linux 清空。
+  if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
   // 醒目的构建标记:用于确认「跑的是不是最新构建」。
   log('[dshwork] ===== BOOT build=2026-09-11-native-harness (no-workbench-plugin) =====');
 
