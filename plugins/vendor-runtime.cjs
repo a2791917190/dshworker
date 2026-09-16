@@ -239,6 +239,68 @@ function vendorHarness(args, resources) {
   console.log(`  ✓ harness + 共享依赖已写入 ${prefix}`);
 }
 
+/**
+ * Windows 控制台窗口补丁(给 vendor 出来的 harness 打上游补丁)。
+ *
+ * 病因:Electron 是 GUI 进程、自身没有控制台,而 subprocess runner 是控制台程序。
+ * 子进程启动时找不到可继承的控制台,Windows 就必须**新建**一个 —— 而下面这两处 spawn
+ * 都没有要求隐藏它,于是桌面版每执行一条命令就弹一个控制台窗口。
+ * (命令行启动时子进程能继承父终端,所以这个问题在 CLI 下天然被掩盖。)
+ *
+ * 上游两个版本各漏一处,都补:
+ *   0.1.5+  launchWindowsJob()  — Windows 普通命令实际走这条(同包 spawnSubprocess 有,就它没有)
+ *   0.1.1   spawnSubprocess()   — 那时还没有 Job 路径,全部走这条,而它自己也没有
+ *
+ * 幂等;锚点找不到、文件里也没有该标志时**抛错** —— 升级 harness 后若上游改写了这段,
+ * 必须有人来看一眼,而不是静默把带 bug 的版本发出去。
+ */
+const WINDOWS_HIDE_PATCHES = [
+  {
+    label: '0.1.5+ launchWindowsJob',
+    match: /(env: runnerEnvironment\(WINDOWS_RUNNER_SELECTION, invocation\),\s*\n\s*stdio: runnerStdio\(spec, true, ignoredStdinFd \?\? "pipe"\))/,
+    replace: (_m, p1) => `${p1},\n\t\t\twindowsHide: true`
+  },
+  {
+    label: '0.1.1 spawnSubprocess',
+    match: /(detached: platform !== "win32")(\s*\n\s*\}\);)/,
+    replace: (_m, p1, p2) => `${p1},\n\t\t\twindowsHide: platform === "win32"${p2}`
+  }
+];
+
+function patchWindowsConsoleHide(resources, harnessSubdir) {
+  // harness 前缀随布局变:app 布局是 <resources>/vendor/harness,
+  // --vendor-root 构建前布局是 <resources>/harness(见 vendorHarness)。
+  const harness = path.join(resources, harnessSubdir || path.join('vendor', 'harness'), 'node_modules');
+  // 两种布局都试:0.1.5 是嵌套(<dsh>/node_modules/@deepseek-ai/...),0.1.1 是扁平。
+  const candidates = [
+    path.join(harness, HARNESS_PKG, 'node_modules', '@deepseek-ai', 'dsh-subprocess-local', 'lib', 'index.js'),
+    path.join(harness, '@deepseek-ai', 'dsh-subprocess-local', 'lib', 'index.js')
+  ];
+  const file = candidates.find((p) => fs.existsSync(p));
+  if (file === void 0) {
+    console.log('  • 未找到 dsh-subprocess-local — 跳过 Windows 控制台窗口补丁');
+    return;
+  }
+
+  const src = fs.readFileSync(file, 'utf8');
+  if (src.includes('windowsHide')) {
+    console.log('  ✓ dsh-subprocess-local 已含 windowsHide — 跳过');
+    return;
+  }
+
+  const rule = WINDOWS_HIDE_PATCHES.find((r) => r.match.test(src));
+  if (rule === void 0) {
+    throw new Error(
+      'dsh-subprocess-local 里既没有 windowsHide、也没有可识别的锚点 —— 上游可能改了这段,'
+      + '请人工确认 Windows 控制台窗口补丁是否还需要'
+    );
+  }
+  const next = src.replace(rule.match, rule.replace);
+  if (!next.includes('windowsHide')) throw new Error('补丁写入失败(替换后仍无 windowsHide)');
+  fs.writeFileSync(file, next, 'utf8');
+  console.log(`  ✓ 已给 dsh-subprocess-local 打上 windowsHide 补丁(${rule.label})`);
+}
+
 function hasCmd(cmd) {
   const r = spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: process.platform === 'win32' });
   return !r.error && r.status === 0;
@@ -314,6 +376,7 @@ async function main() {
 
   if (!args.skipNode) await vendorNode(args, resources);
   if (!args.skipHarness) vendorHarness(args, resources);
+  patchWindowsConsoleHide(resources, args.harnessSubdir);
 
   console.log('\n验证:');
   const nodeExe = process.platform === 'win32' ? 'node.exe' : path.join('bin', 'node');

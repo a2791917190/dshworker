@@ -148,6 +148,29 @@ npm start          # 或 npm.cmd start
 > `DSHWORK_HARNESS_URL` 指定已有服务)。壳会尝试用 `npx @deepseek-ai/dsh web` 拉起,
 > 生产环境建议改为随包内置的固定版本。
 
+### ⚠️ 改的是 harness 本身？关掉再打开是没用的
+
+启动时如果 `http://127.0.0.1:3080` 上**已经有 harness 在跑**,客户端会**直接复用它**,
+不再拉起内置那份。所以只要你改的是 **harness 自身的代码**(打补丁、换内置版本、动
+`desktop/vendor/`),**仅仅关掉再打开 DSHwork 不会有任何效果** —— 必须先结束正在跑的
+harness 进程。
+
+从日志区分(`$DSH_HOME\logs\dshwork.log`):
+
+```
+[harness] reusing running harness; token: yes   ← 复用了旧进程,改动不会生效
+[harness] spawn bundled harness: ...            ← 新拉起,改动生效
+```
+
+结束正在跑的 harness:
+
+```powershell
+Get-NetTCPConnection -LocalPort 3080 -State Listen |
+  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+> 只改**用户 workspace 里的插件**不受影响,那部分会热重载。
+
 ## 构建安装包
 
 **Windows(NSIS):**

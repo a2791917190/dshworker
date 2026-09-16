@@ -239,6 +239,9 @@ function findBundledHarness() {
   }
   // 开发态:项目内的 vendor 或本地依赖
   candidates.push(path.join(__dirname, '..', '..', 'vendor', 'dsh'));
+  // 开发态也认 vendor/harness(与打包后同布局,vendor-runtime.cjs 会写这里并打上
+  // Windows 控制台窗口补丁,让 npm start 与打包版行为一致)
+  candidates.push(path.join(__dirname, '..', '..', 'vendor', 'harness', 'node_modules', HARNESS_NPM_PKG));
   candidates.push(path.join(__dirname, '..', '..', 'node_modules', HARNESS_NPM_PKG));
 
   for (const dir of candidates) {
