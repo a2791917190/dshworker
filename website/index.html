@@ -204,6 +204,10 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 .hero-sub { font-size: 16px; color: var(--ink-2); max-width: 620px; margin: 0 auto 48px; }
 .hero-dl { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
 .hero-note { font-size: 13.5px; color: var(--ink-3); }
+/* macOS 安装说明入口(未签名应用的 Gatekeeper 拦截) */
+.mac-guide { display: inline-block; margin-bottom: 10px; font-size: 13.5px; font-weight: 600;
+  color: var(--brand-600); border-bottom: 1px dashed var(--brand-tint); padding-bottom: 1px; }
+.mac-guide:hover { color: var(--brand-700); border-bottom-color: var(--brand); }
 
 /* ---------- app screenshot (screen 2) ---------- */
 .showcase { padding: 48px 0 0; }
@@ -620,6 +624,9 @@ html[data-theme="dark"] .band-dark {
           <span data-i18n="download.mac">下载 macOS 版</span>
         </a>
       </div>
+      <p class="reveal" data-delay="4">
+        <a class="mac-guide" href="./mac.html" data-i18n="hero.macGuide">macOS 首次打开被系统拦截？看安装说明 →</a>
+      </p>
       <p class="hero-note reveal" data-delay="4" data-i18n="hero.note">免费下载&nbsp;·&nbsp;本地部署&nbsp;·&nbsp;隐私安全</p>
     </div>
   </section>

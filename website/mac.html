@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>macOS 安装说明 — DSHwork</title>
+<meta name="description" content="macOS 首次打开 DSHwork 被系统拦截（Malware Blocked / 已移到废纸篓）时怎么办：用 curl 下载避开隔离标记、去掉 quarantine 属性，或用「仍要打开」。" />
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-sans@5.1.0/700.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.1.0/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/500.css" />
+<link rel="icon" href="assets/img/favicon.png" />
+
+<script>
+// 主题要在首帧前定好,避免闪白(与 index.html 共用 dsh-theme)
+(function () {
+  var t;
+  try { t = localStorage.getItem('dsh-theme'); } catch (e) { /* 隐私模式 */ }
+  if (t !== 'dark' && t !== 'light') {
+    t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+
+<style>
+/* ============================================================
+   与 index.html 同一套设计变量(Light · minimal · DeepSeek blue)
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #f7f8fb;
+  --bg-tint: #f2f4ff;
+  --ink: #0e1319;
+  --ink-2: #57606f;
+  --ink-3: #8b93a2;
+  --line: #e8eaef;
+  --line-strong: #d8dce5;
+  --brand: #4d6bfe;
+  --brand-600: #3a55e8;
+  --brand-700: #2c43c7;
+  --brand-soft: #eef1ff;
+  --brand-tint: #e3e9ff;
+  --green: #22c55e;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-xs: 0 1px 2px rgba(14, 19, 25, 0.05);
+  --shadow-sm: 0 4px 16px -6px rgba(14, 19, 25, 0.10);
+  --shadow: 0 18px 44px -22px rgba(23, 34, 90, 0.28);
+  --font-display: "Montserrat", "DM Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font: "DM Sans", system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --maxw: 760px;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --bg-soft: #101010;
+  --bg-tint: #141414;
+  --ink: #ffffff;
+  --ink-2: rgba(255, 255, 255, 0.80);
+  --ink-3: rgba(255, 255, 255, 0.50);
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --brand: #6799fe;
+  --brand-600: #73a3d2;
+  --brand-700: #a9c5ff;
+  --brand-soft: rgba(103, 153, 254, 0.14);
+  --brand-tint: rgba(103, 153, 254, 0.28);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 16px -6px rgba(0, 0, 0, 0.5);
+  --shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.7);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 500; line-height: 1.25; letter-spacing: -0.012em; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--brand-tint); color: var(--brand-700); }
+
+/* ---------- top bar ---------- */
+.mg-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  max-width: var(--maxw); margin: 0 auto; padding: 22px 24px 0;
+}
+.mg-back { font-size: 14.5px; font-weight: 500; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.mg-back:hover { color: var(--brand-600); }
+.mg-actions { display: flex; align-items: center; gap: 8px; }
+.mg-lang { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; background: var(--bg); }
+.mg-lang button {
+  font-family: var(--font); font-size: 13px; font-weight: 600; padding: 5px 12px;
+  border: 0; background: transparent; color: var(--ink-3); cursor: pointer;
+}
+.mg-lang button.is-active { background: var(--brand); color: #fff; }
+.mg-theme {
+  width: 34px; height: 34px; border: 1px solid var(--line-strong); border-radius: 9px;
+  background: var(--bg); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+.mg-theme:hover { border-color: var(--brand); color: var(--brand-600); }
+.mg-theme svg { width: 17px; height: 17px; }
+.mg-theme .ico-sun { display: none; }
+html[data-theme="dark"] .mg-theme .ico-sun { display: block; }
+html[data-theme="dark"] .mg-theme .ico-moon { display: none; }
+
+/* ---------- content ---------- */
+.mg-wrap { max-width: var(--maxw); margin: 0 auto; padding: 28px 24px 96px; }
+.mg-wrap h1 { font-size: 32px; margin: 12px 0 14px; }
+.mg-lede { font-size: 16px; line-height: 1.8; color: var(--ink-2); margin-bottom: 8px; }
+.mg-wrap h2 {
+  font-size: 19px; margin: 40px 0 12px; padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+.mg-wrap p { font-size: 15px; line-height: 1.8; color: var(--ink-2); margin: 10px 0; }
+.mg-wrap strong { color: var(--ink); font-weight: 600; }
+.mg-wrap ol, .mg-wrap ul { padding-left: 22px; margin: 10px 0 14px; }
+.mg-wrap li { font-size: 15px; line-height: 1.8; color: var(--ink-2); margin: 4px 0; }
+.mg-wrap code {
+  font-family: var(--mono); font-size: 13px; background: var(--bg-soft);
+  border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--ink);
+}
+
+.mg-quote {
+  border-left: 3px solid var(--brand); background: var(--brand-soft);
+  border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; margin: 16px 0 8px;
+}
+.mg-quote p { margin: 0; font-family: var(--mono); font-size: 13.5px; color: var(--ink); }
+
+.mg-code { position: relative; margin: 12px 0 18px; }
+.mg-code pre {
+  background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; overflow-x: auto; margin: 0;
+}
+.mg-code code {
+  background: none; border: 0; padding: 0; font-size: 13px; line-height: 1.8;
+  color: var(--ink); white-space: pre;
+}
+.mg-copy {
+  position: absolute; top: 10px; right: 10px;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  background: var(--bg); border: 1px solid var(--line-strong); color: var(--ink-3);
+  border-radius: 7px; padding: 4px 10px; cursor: pointer;
+}
+.mg-copy:hover { color: var(--brand-600); border-color: var(--brand); }
+
+.mg-tip {
+  background: var(--bg-tint); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 18px; margin: 16px 0;
+}
+.mg-tip p { margin: 0; font-size: 14px; }
+
+.mg-faq dt { font-weight: 600; color: var(--ink); font-size: 15px; margin-top: 18px; }
+.mg-faq dd { color: var(--ink-2); font-size: 14.5px; line-height: 1.8; margin: 6px 0 0; }
+
+.mg-foot { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 13px; }
+</style>
+</head>
+
+<body>
+
+<header class="mg-top">
+  <a class="mg-back" href="./index.html">
+    <span data-zh="← 返回首页" data-en="← Back to home">← 返回首页</span>
+  </a>
+  <div class="mg-actions">
+    <div class="mg-lang" id="mgLang" role="group" aria-label="Language / 语言">
+      <button type="button" data-lang="zh">中文</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <button class="mg-theme" id="mgTheme" type="button" aria-label="Toggle light / dark theme">
+      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="mg-wrap">
+
+  <h1 data-zh="macOS 安装说明" data-en="Installing on macOS">macOS 安装说明</h1>
+  <p class="mg-lede"
+     data-zh="首次打开 DSHwork 时，macOS 可能把它当成恶意软件并移入废纸篓。这是对「从网上下载、且没有 Apple 签名」的应用的标准拦截，不是病毒告警。下面任选一种方法即可正常使用。"
+     data-en="On first launch macOS may report DSHwork as malware and move it to the Trash. That is the standard block for a downloaded app without an Apple signature — not a virus warning. Any one of the methods below gets you running.">
+  </p>
+
+  <h2 data-zh="你会看到这个" data-en="What you'll see">你会看到这个</h2>
+  <div class="mg-quote">
+    <p>“DSHwork.app” was not opened because it contains malware. This action did not harm your Mac.</p>
+  </div>
+  <p data-zh="意思是：macOS 检查了这个应用的来源与签名，发现没有 Apple 的签名/公证，于是拦下。DSHwork 目前是开发预览版，还没有购买 Apple 开发者签名 —— 代码是开源的，可以自行审计，也可以直接从源码构建。"
+     data-en="It means macOS checked the app's origin and signature, found no Apple signature or notarization, and blocked it. DSHwork is a developer preview without an Apple Developer signature — the source is open, so you can audit it or build it yourself.">
+  </p>
+
+  <h2 data-zh="方法 A · 用终端下载（推荐）" data-en="Method A · Download via Terminal (recommended)">方法 A · 用终端下载（推荐）</h2>
+  <p data-zh="浏览器会给下载的文件打上「来自互联网」的隔离标记，curl 不会。这样下完直接双击就能打开。把下面整段粘进「终端」(Terminal) 回车即可。"
+     data-en="A browser tags downloaded files with a quarantine flag; curl does not. After this, double-clicking just works. Paste the whole block into Terminal and press Return.">
+  </p>
+
+  <p><strong data-zh="ZIP 版" data-en="ZIP">ZIP 版</strong></p>
+  <div class="mg-code"><pre><code>curl -L -o ~/Downloads/DSHwork-mac.zip \
+  https://dshwork.ai/dist/DSHwork-0.1.0-arm64-mac.zip
+
+cd ~/Downloads &amp;&amp; unzip -q DSHwork-mac.zip &amp;&amp; open DSHwork.app</code></pre></div>
+
+  <p><strong data-zh="DMG 版" data-en="DMG">DMG 版</strong></p>
+  <div class="mg-code"><pre><code>curl -L -o ~/Downloads/DSHwork.dmg \
+  https://dshwork.ai/dist/DSHwork-0.1.0-arm64.dmg
+
+hdiutil attach ~/Downloads/DSHwork.dmg
+# 把 DSHwork 拖进「应用程序」，然后：
+xattr -dr com.apple.quarantine /Applications/DSHwork.app</code></pre></div>
+
+  <div class="mg-tip">
+    <p data-zh="上面的网址只是示例：请以官网下载按钮为准 —— 右键点「下载 macOS 版」→「复制链接」，替换命令里的网址。"
+       data-en="Those URLs are examples only. Use the real one: right-click “Download for macOS” → “Copy Link”, then swap it into the command.">
+    </p>
+  </div>
+
+  <h2 data-zh="方法 B · 已经下载了 / 已被移进废纸篓" data-en="Method B · Already downloaded / moved to Trash">方法 B · 已经下载了 / 已被移进废纸篓</h2>
+  <ol>
+    <li data-zh="先还原：打开「废纸篓」，右键 DSHwork.app →「放回原处」。"
+        data-en="Restore it first: open Trash, right-click DSHwork.app → “Put Back”.">先还原</li>
+    <li data-zh="如果是 zip 就先解压；然后对 .app 本身去掉隔离标记（注意是 .app，不是外面那层文件夹）。"
+        data-en="Unzip if needed, then strip the quarantine flag on the .app itself (not the parent folder).">去掉隔离标记</li>
+  </ol>
+  <div class="mg-code"><pre><code>xattr -dr com.apple.quarantine ~/Downloads/DSHwork.app</code></pre></div>
+
+  <p data-zh="如果仍然被拦，或提示「已损坏，无法打开」—— 用递归模式清除全部扩展属性，再打开："
+     data-en="Still blocked, or “is damaged and can't be opened”? Clear every extended attribute recursively, then open it:">
+  </p>
+  <div class="mg-code"><pre><code>xattr -cr ~/Downloads/DSHwork.app
+open ~/Downloads/DSHwork.app</code></pre></div>
+
+  <h2 data-zh="方法 C · 不想开终端" data-en="Method C · No Terminal">方法 C · 不想开终端</h2>
+  <ol>
+    <li data-zh="若 app 已被移进废纸篓，先「放回原处」。"
+        data-en="If it was moved to Trash, put it back first.">还原</li>
+    <li data-zh="打开「系统设置」→「隐私与安全性」。"
+        data-en="Open System Settings → Privacy &amp; Security.">打开系统设置</li>
+    <li data-zh="向下滚动到「安全性」区域，会看到一条关于 DSHwork 被拦截的提示。"
+        data-en="Scroll down to the Security section; you'll see a note that DSHwork was blocked.">找到提示</li>
+    <li data-zh="点「仍要打开」，输入开机密码确认。"
+        data-en="Click “Open Anyway” and confirm with your password.">仍要打开</li>
+    <li data-zh="再双击 DSHwork 即可。"
+        data-en="Double-click DSHwork again.">再次打开</li>
+  </ol>
+  <div class="mg-tip">
+    <p data-zh="macOS 15 (Sequoia) 起，右键 →「打开」这条老捷径对未公证应用已不再可靠 —— 请用上面这个入口。"
+       data-en="Since macOS 15 (Sequoia) the old right-click → Open shortcut is no longer reliable for un-notarized apps. Use the entry above.">
+    </p>
+  </div>
+
+  <h2 data-zh="常见问题" data-en="FAQ">常见问题</h2>
+  <dl class="mg-faq">
+    <dt data-zh="是病毒吗？" data-en="Is it malware?">是病毒吗？</dt>
+    <dd data-zh="不是。这是 Gatekeeper 对「来自互联网且未签名」应用的默认策略，所有没有 Apple 签名的独立开发者应用都会遇到。"
+        data-en="No. It is Gatekeeper's default policy for downloaded, unsigned apps — every unsigned indie app hits this.">不是。</dd>
+
+    <dt data-zh="为什么不直接签名，让大家双击就能用？" data-en="Why not sign it so it opens normally?">为什么不直接签名？</dt>
+    <dd data-zh="签名与公证需要 Apple Developer Program（99 美元/年）。在拿到之前，只能按上面的方式手动放行。"
+        data-en="Signing and notarization require the Apple Developer Program ($99/year). Until that is in place, the manual steps above are the only way.">需要付费开发者账号。</dd>
+
+    <dt data-zh="Intel Mac 能用吗？" data-en="Does it run on Intel Macs?">Intel Mac 能用吗？</dt>
+    <dd data-zh="当前构建是 Apple Silicon（arm64）。Intel 机器可以试试用 Rosetta 运行，或者从源码自行构建。"
+        data-en="The current build targets Apple Silicon (arm64). Intel Macs can try running it via Rosetta, or build from source.">当前是 arm64。</dd>
+
+    <dt data-zh="首次启动很慢？" data-en="First launch is slow?">首次启动很慢？</dt>
+    <dd data-zh="正常。首次启动会用内置的 Node 拉起 Harness 服务，需要几十秒；之后就快了。"
+        data-en="Expected. The first launch starts the bundled Node runtime and boots Harness, which takes a few dozen seconds.">正常。</dd>
+
+    <dt data-zh="怎么确认下载没被篡改？" data-en="How do I verify the download?">怎么确认没被篡改？</dt>
+    <dd data-zh="代码开源，可以自行审计；也可以直接从源码构建，完全绕开上面的步骤。"
+        data-en="The source is open — audit it, or build from source and skip all of the above.">可自行审计或构建。</dd>
+  </dl>
+
+  <p class="mg-foot" data-zh="DSHwork · 基于开源的 DeepSeek Harness 构建" data-en="DSHwork · built on the open-source DeepSeek Harness">DSHwork · 基于开源的 DeepSeek Harness 构建</p>
+</main>
+
+<script>
+(function () {
+  /* ---------- 语言(与 index.html 共用 dshwork-lang) ---------- */
+  var LANG_KEY = 'dshwork-lang';
+  var lang = 'zh';
+  try { lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'zh'; } catch (e) { /* 忽略 */ }
+
+  function applyLang(next) {
+    lang = next;
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-zh]').forEach(function (el) {
+      el.textContent = lang === 'zh' ? el.dataset.zh : el.dataset.en;
+    });
+    document.querySelectorAll('#mgLang button').forEach(function (b) {
+      b.classList.toggle('is-active', b.dataset.lang === lang);
+    });
+    document.querySelectorAll('.mg-copy').forEach(function (b) {
+      b.textContent = lang === 'zh' ? '复制' : 'Copy';
+    });
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* 忽略 */ }
+  }
+
+  /* ---------- 主题(与 index.html 共用 dsh-theme) ---------- */
+  function applyTheme(next) {
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('dsh-theme', next); } catch (e) { /* 忽略 */ }
+  }
+
+  /* ---------- 代码块复制按钮 ---------- */
+  document.querySelectorAll('.mg-code').forEach(function (box) {
+    var btn = document.createElement('button');
+    btn.className = 'mg-copy';
+    btn.type = 'button';
+    btn.addEventListener('click', function () {
+      var code = box.querySelector('code');
+      var text = code ? code.textContent : '';
+      var done = function () {
+        btn.textContent = '✓';
+        setTimeout(function () { btn.textContent = lang === 'zh' ? '复制' : 'Copy'; }, 1200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* 忽略 */ }
+        document.body.removeChild(ta);
+        done();
+      }
+    });
+    box.appendChild(btn);
+  });
+
+  /* ---------- 绑定开关 ---------- */
+  document.querySelectorAll('#mgLang button').forEach(function (b) {
+    b.addEventListener('click', function () { applyLang(b.dataset.lang); });
+  });
+  var themeBtn = document.getElementById('mgTheme');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var now = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(now);
+    });
+  }
+
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>
