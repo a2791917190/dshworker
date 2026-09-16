@@ -8,8 +8,8 @@
    `spawnSubprocess()` 里已经写着 `windowsHide: platform === 'win32'`(从 0.1.5-rc.1 起每个已发布版本里都有)。
    维护者已经认可并采纳了这个修法,漏掉的只是 **Windows 实际上走的那条路**。
    对上游来说这不是"新需求",是"补齐一处遗漏"。
-2. **改一行,零语义变化。** 只影响控制台窗口可见性(`STARTF_USESHOWWINDOW` + `SW_HIDE`),
-   不动 stdio 布局、Job 归属、生命周期、错误映射、返回值。
+2. **改一行,零语义变化。** 只影响控制台窗口可见性(见第六节的实测:不加隐藏 → 子进程有可见控制台;
+   加隐藏 → 句柄为 0、不可见),不动 stdio 布局、Job 归属、生命周期、错误映射、返回值。
 3. **上游现有测试不会挂。** `tests/windows-job.spec.ts` 对 spawn 选项一律用
    `expect.objectContaining({...})`(只断言 `cwd` / `stdio`),没有全等比较 → 加一个键即通过。
 
@@ -146,3 +146,22 @@ Electron 宿主是 GUI 子系统进程、**自己没有控制台**;`launchWindow
 2. **本机全局装的 dsh** —— `patch-windows-hide.cjs` 自动定位 `npm -g` 的安装并补同一处
    (客户端 `findInstalledDsh()` 优先用全局那份,不补就等于没修);写前备份 `.bak-winhide`,幂等。
 3. **判据**:`lib/index.js` 里 `windowsHide` 由 0 变 1,且 `node --check` 通过。
+
+## 六、机制实测(GUI 宿主下控制台到底可不可见)
+
+在 Windows 上用 **GUI 子系统宿主**(自身没有控制台)拉起同一个控制台子进程,由子进程自报
+`GetConsoleWindow()` 与 `IsWindowVisible()`:
+
+| 宿主 → 子进程 | 子进程的控制台句柄 | 是否可见 |
+| --- | --- | --- |
+| 不要求隐藏(≈ 补丁前的 `launchWindowsJob`) | `6949514` | **true** ← 就是那个黑框 |
+| 要求隐藏(≈ 补丁后的 `launchWindowsJob`) | `0` | **false** |
+
+- 要求隐藏后句柄直接是 `0`:控制台**根本没有被创建**(`CREATE_NO_WINDOW` 那一支),不是"建好了再藏起来"。
+- 对照组:同一台机器上从命令行(父进程自带控制台)拉起同样两个子进程,二者都**继承**父控制台、都不新建窗口 ——
+  所以 CLI 下永远看不到这个现象,这正是它一路漏到最新版的原因。
+- 脚本:`docs/repro-windows-console/`(用 `pythonw.exe host.pyw` 跑,结果落在 `result.txt`)。
+  Node 的 `windowsHide: true` 走的是隐藏控制台的同一族
+  进程创建标志(`STARTF_USESHOWWINDOW`+`SW_HIDE` 或 `CREATE_NO_WINDOW`);上表测的是后者那一支。
+  端到端的 Electron 版没跑成 —— 本机沙箱里 Electron 起不来,所以 GUI 宿主用了 Python 的最小替身。
+

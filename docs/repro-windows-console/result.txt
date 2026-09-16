@@ -1,0 +1,5 @@
+host: pythonw.exe (GUI subsystem, no console)
+spawn WITHOUT hide  (== launchWindowsJob before the patch)
+    -> {"console_hwnd": 51251438, "console_visible": true}
+spawn WITH    hide  (== launchWindowsJob after  the patch)
+    -> {"console_hwnd": 0, "console_visible": false}
