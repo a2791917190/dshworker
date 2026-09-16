@@ -402,7 +402,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('\nvendor-runtime failed:', err && err.message);
-  process.exit(1);
-});
+module.exports = { patchWindowsConsoleHide, WINDOWS_HIDE_PATCHES };
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('\nvendor-runtime failed:', err && err.message);
+    process.exit(1);
+  });
+}
