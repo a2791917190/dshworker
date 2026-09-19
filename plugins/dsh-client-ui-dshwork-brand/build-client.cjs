@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const b64Path = path.join(__dirname, '..', '..', 'desktop', 'assets', 'brand', 'logo-mark.base64.txt');
 if (!fs.existsSync(b64Path)) {
@@ -72,9 +73,12 @@ const template = `window.__ModuleLoader__.load({
 \t\t\t\t".dsw-ref:hover{background:rgba(0,0,0,.06)}",
 \t\t\t\t".dsw-foot{display:flex;align-items:center;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
 \t\t\t\t".dsw-hint{flex:1;font-size:12px;color:#8a8a8a}",
-\t\t\t\t".dsw-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 8px 7px 2px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
+\t\t\t\t".dsw-row{display:flex;align-items:center;gap:7.5px;width:100%;box-sizing:border-box;padding:7px 8px 7px 4.5px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
 \t\t\t\t".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
 \t\t\t\t".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
+\t\t\t\t// 侧栏收起成 56px 图标轨道时只留图标:用容器查询(不依赖上游 hash 过的类名)。
+\t\t\t\t".dsw-entries{container-type:inline-size}",
+\t\t\t\t"@container (max-width: 100px){.dsw-row-label{display:none}.dsw-row{justify-content:center;padding-left:0;padding-right:4px;margin-left:0}.dsw-row:hover{border-left-color:transparent}.dsw-row + .dsw-row{margin-top:3px}.dsw-row-icon svg[data-k=\\"plugins\\"]{width:16.6px;height:16.6px}.dsw-row-icon svg[data-k=\\"skills\\"]{width:20.7px;height:20.7px}}",
 \t\t\t\t".dsw-corner{display:flex;align-items:center;gap:8px}",
 \t\t\t\t".dsw-dot{width:7px;height:7px;border-radius:50%;background:#3fd68f;display:inline-block}",
 \t\t\t\t".dsw-status{font-size:12.5px;color:var(--dsw-alias-label-secondary,#666)}",
@@ -208,17 +212,31 @@ const template = `window.__ModuleLoader__.load({
 
 \t\tfunction Icon({ kind }) {
 \t\t\tconst paths = {
-\t\t\t\tplugins: "M4 7h4V3h2v4h4V3h2v4h2v10H2V7h2zm0 2v6h12V9H4z",
+\t\t\t\tplugins: "M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z",
 \t\t\t\tskills: "M10 2l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4L5.5 15.8l.9-5L2.8 7.3l5-.7L10 2z"
 \t\t\t};
-\t\t\treturn React.createElement("svg", { viewBox: "0 0 20 20", width: 18, height: 18, fill: "none", stroke: "currentColor", strokeWidth: 1.4, strokeLinejoin: "round" },
-\t\t\t\tReact.createElement("path", { d: paths[kind] || "" }));
+\t\t\t// plugins 取自 Lucide 的 puzzle 图标(lucide-static v0.453.0, ISC 许可),24x24 原稿,坐标零换算。
+\t\t\tconst VIEW_BOXES = { plugins: "0 0 24 24" };
+\t\t\tconst STROKE_WIDTHS = { plugins: 2 };
+\t\t\t// 三个图标画布占满度不同(设置 93% / 插件 92% / 星星 79%),svg 尺寸一样则视觉大小不齐。
+\t\t\t// 按「视觉尺寸对齐上游设置(展开 14.95px、收起 16.33px)」反推各自 svg 尺寸。
+\t\t\tconst SIZES = { plugins: 15.2, skills: 18.9 };
+\t\t\tconst TRANSFORMS = { skills: "translate(0 1.1)" };
+\t\t\tconst svgSize = SIZES[kind] || 18;
+\t\t\treturn React.createElement("svg", {
+\t\t\t\tviewBox: VIEW_BOXES[kind] || "0 0 20 20",
+\t\t\t\twidth: svgSize, height: svgSize, "data-k": kind,
+\t\t\t\tfill: "none", stroke: "currentColor",
+\t\t\t\tstrokeWidth: STROKE_WIDTHS[kind] || 1.4,
+\t\t\t\tstrokeLinejoin: "round", strokeLinecap: "round"
+\t\t\t},
+\t\t\t\tReact.createElement("path", { d: paths[kind] || "", transform: TRANSFORMS[kind] }));
 \t\t}
 
 \t\tfunction EntryRow({ icon, label, onClick }) {
-\t\t\treturn React.createElement("button", { type: "button", className: "dsw-row", onClick: onClick },
+\t\t\treturn React.createElement("button", { type: "button", className: "dsw-row", title: label, onClick: onClick },
 \t\t\t\tReact.createElement("span", { className: "dsw-row-icon" }, React.createElement(Icon, { kind: icon })),
-\t\t\t\tReact.createElement("span", null, label));
+\t\t\t\tReact.createElement("span", { className: "dsw-row-label" }, label));
 \t\t}
 
 \t\t// 把技能引用插进输入框(真的写进 composer)。
@@ -405,7 +423,7 @@ const template = `window.__ModuleLoader__.load({
 \t\t}
 
 \t\tfunction FooterAction() {
-\t\t\treturn React.createElement("div", { style: { display: "flex", flexDirection: "column", width: "100%" } },
+\t\t\treturn React.createElement("div", { className: "dsw-entries", style: { display: "flex", flexDirection: "column", width: "100%", gap: "9px" } },
 \t\t\t\tReact.createElement(EntryRow, { icon: "plugins", label: "插件", onClick: () => store.openPage("plugins") }),
 \t\t\t\tReact.createElement(EntryRow, { icon: "skills", label: "技能", onClick: () => store.openPage("skills") }));
 \t\t}
@@ -454,6 +472,16 @@ const template = `window.__ModuleLoader__.load({
 `;
 
 const out = path.join(__dirname, 'lib', 'client.js');
+const source = template.replace('__MARK__', JSON.stringify(MARK));
+// 生成的 bundle 在浏览器里是「一条 combo 脚本里的一段」:语法错误会让**整条 combo**
+// 报废,不是只挂掉本插件 —— harness 只会报第一个到达的 entry「loaded without registering」,
+// 真凶(这里的模板转义)完全不露面。所以先解析一遍,失败就不落盘。
+try {
+  new vm.Script(source, { filename: 'client.js' });
+} catch (err) {
+  console.error('生成的 bundle 无法解析,已放弃写入 lib/client.js:', err && err.message);
+  process.exit(1);
+}
 fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, template.replace('__MARK__', JSON.stringify(MARK)), 'utf8');
+fs.writeFileSync(out, source, 'utf8');
 console.log('已生成:', out, `(${fs.statSync(out).size} bytes)`);
