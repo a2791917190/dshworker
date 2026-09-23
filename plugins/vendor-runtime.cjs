@@ -208,7 +208,9 @@ function vendorHarness(args, resources) {
     if (registry) argsList.push('--registry=' + registry);
     argsList.push(...targets);
   } else {
-    argsList = ['install', '--prefix', prefix, ...targets];
+    // 上游 peer 之间会互相打架(例如 shell-env 要求精确 cordis@4.0.2,web-app 允许 ^4.0.2),
+    // npm 默认严格校验会直接 ERESOLVE 失败;这些 peer 只是声明,运行时由 hoisted 树满足。
+    argsList = ['install', '--legacy-peer-deps', '--prefix', prefix, ...targets];
     if (registry) argsList.push('--registry=' + registry);
   }
 
