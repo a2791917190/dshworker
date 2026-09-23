@@ -547,6 +547,9 @@ function spawnNpxHarness(runtime, pinnedVersion, onOutput) {
   return spawnProcess(exe, args, { shell, onOutput });
 }
 
+/** 壳自己拉起的 harness 进程;复用已在跑的外部 harness 时保持 null。 */
+let managedChild = null;
+
 /** 通用 spawn 包装:拉起后 unref,脱离于 Electron 生命周期;失败返回 false。
  *  `onOutput` 可选:捕获子进程 stdout(用于提取 harness 的 auth token)。 */
 function spawnProcess(exe, args, { shell = false, onOutput } = {}) {
@@ -567,11 +570,36 @@ function spawnProcess(exe, args, { shell = false, onOutput } = {}) {
       resolve(false);
     });
     child.on('spawn', () => {
+      managedChild = child;
       child.unref();
       resolve(true);
     });
-    child.on('exit', (code) => log('[harness] harness process exited early:', code));
+    child.on('exit', (code) => {
+      if (managedChild === child) managedChild = null;
+      log('[harness] harness process exited early:', code);
+    });
   });
+}
+
+/** 停掉壳自己拉起的 harness;复用已在跑的外部 harness 时什么都不做,以免误杀。
+ *  正常退出路径调用它,避免残留 node 进程占用安装目录、并保证下次启动加载最新插件。 */
+function stopHarness() {
+  const proc = managedChild;
+  managedChild = null;
+  if (!proc || proc.killed || proc.pid === undefined) return;
+  const pid = proc.pid;
+  try {
+    if (process.platform === 'win32') {
+      // 进程树:/T 连同 harness 自己拉起的子进程一起收掉。
+      spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    } else {
+      // detached 拉起的进程自成一个进程组,按组回收。
+      process.kill(-pid, 'SIGTERM');
+    }
+    log('[harness] stopped harness pid', pid);
+  } catch (err) {
+    log('[harness] stop harness failed:', err && err.message);
+  }
 }
 
 function isUp(url) {
@@ -616,6 +644,7 @@ module.exports = {
   findBundledHarness,
   resolveHarnessVersion,
   bootHarness,
+  stopHarness,
   findInstalledDsh,
   getHarnessUrl,
   getHarnessToken,

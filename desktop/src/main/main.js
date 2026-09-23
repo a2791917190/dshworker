@@ -20,6 +20,7 @@ const { log } = require('./log');
 const {
   bootHarness,
   resolveHarnessVersion,
+  stopHarness,
   HARNESS_URL,
   getHarnessUrl,
   BUNDLED_HARNESS_VERSION
@@ -212,5 +213,10 @@ app.on('activate', () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    // harness 是 detached 拉起的,不主动回收会残留 node 进程:既占用安装目录,
+    // 又让下次启动复用旧 harness、加载不到更新后的插件。
+    stopHarness();
+    app.quit();
+  }
 });
