@@ -1,0 +1,487 @@
+'use strict';
+
+/**
+ * 生成 lib/client.js(DSHwork 品牌/入口客户端插件):
+ *  - 首页 hero 品牌 mark = dshwork 小鲸鱼 logo;
+ *  - hero 文案:DOM 层把 "探索未至之境" 换成 "让DSH Work 帮你高效完成工作任务!",并藏掉"预览版"角标;
+ *  - 侧边栏底部「插件」「技能」入口,样式仿「设置」行;
+ *  - 会话头部右上角:用户头像 + 运行状态(占位)。
+ *
+ * 用法(在插件目录下): node build-client.cjs
+ */
+
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const b64Path = path.join(__dirname, '..', '..', 'desktop', 'assets', 'brand', 'logo-mark.base64.txt');
+if (!fs.existsSync(b64Path)) {
+  console.error('缺少图标 base64:', b64Path, '(先跑 desktop/scripts/make-brand-icon.cjs)');
+  process.exit(1);
+}
+const MARK = fs.readFileSync(b64Path, 'utf8').trim();
+
+const template = `window.__ModuleLoader__.load({
+\tid: "@dshwork/dsh-client-ui-dshwork-brand",
+\tfactory: (require) => {
+\t\tvar module = { exports: {} };
+\t\tvar exports = module.exports;
+\t\tvar React = require("react");
+\t\tconst { useState, useSyncExternalStore } = React;
+
+\t\tconst MARK = __MARK__;
+\t\tconst HERO_HEADLINE = "让DSH Work 帮你高效完成工作任务！";
+\t\tconst HERO_OLD = ["探索未至之境", "Into the Unknown"];
+\t\tconst PREVIEW_OLD = ["预览版", "Preview"];
+
+\t\t// ── overlay store ──
+\t\tvar v = { open: false, page: "plugins" };
+\t\tconst listeners = new Set();
+\t\tfunction emit() { for (const l of [...listeners]) l(); }
+\t\tconst store = {
+\t\t\tsubscribe(cb) { listeners.add(cb); return () => listeners.delete(cb); },
+\t\t\tgetSnapshot() { return v.open ? v.page : ""; },
+\t\t\topenPage(page) { v.open = true; v.page = page; emit(); },
+\t\t\tclose() { v.open = false; emit(); }
+\t\t};
+
+\t\t// ── 样式 ──
+\t\t(function injectStyles() {
+\t\t\tif (typeof document === "undefined") return;
+\t\t\tif (document.querySelector("style[data-dshwork-brand]") !== null) return;
+\t\t\tconst css = [
+\t\t\t\t".dsw-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(4,8,16,.5);padding:24px;box-sizing:border-box}",
+\t\t\t\t".dsw-panel{width:min(680px,100%);max-height:86vh;overflow:auto;background:#ffffff;color:#141414;border:1px solid rgba(0,0,0,.12);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.45)}",
+\t\t\t\t".dsw-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--dsw-alias-border-l1,rgba(0,0,0,.08))}",
+\t\t\t\t".dsw-brand{font-weight:700}",
+\t\t\t\t".dsw-close{background:0 0;border:none;font-size:20px;line-height:1;cursor:pointer;color:var(--dsw-alias-label-secondary,#888)}",
+\t\t\t\t".dsw-tabs{display:flex;gap:20px;padding:0 18px;border-bottom:1px solid rgba(0,0,0,.08)}",
+\t\t\t\t".dsw-tab{background:0 0;border:none;border-bottom:2px solid transparent;padding:10px 2px;font-size:13.5px;cursor:pointer;color:#6b6b6b;font-family:inherit}",
+\t\t\t\t".dsw-tab.on{color:#141414;border-bottom-color:#3b82f6;font-weight:600}",
+\t\t\t\t".dsw-body{padding:16px 18px}",
+\t\t\t\t".dsw-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(0,0,0,.1);border-radius:10px;margin-bottom:8px;background:#fff}",
+\t\t\t\t".dsw-item-main{flex:1;min-width:0}",
+\t\t\t\t".dsw-item b{display:block;font-size:14px;color:#141414}",
+\t\t\t\t".dsw-item-main span{font-size:12.5px;color:#7a7a7a}",
+\t\t\t\t".dsw-badge{flex:none;font-size:12px;color:#1f9d55;background:rgba(31,157,85,.12);border-radius:999px;padding:3px 10px}",
+\t\t\t\t".dsw-switch{position:relative;flex:none;width:38px;height:22px;border-radius:11px;border:none;background:rgba(0,0,0,.2);cursor:pointer;padding:0;transition:background .15s}",
+\t\t\t\t".dsw-switch.on{background:#3b82f6}",
+\t\t\t\t".dsw-switch.disabled{opacity:.45;cursor:default}",
+\t\t\t\t".dsw-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}",
+\t\t\t\t".dsw-switch.on .dsw-knob{transform:translateX(16px)}",
+\t\t\t\t".dsw-ref{flex:none;border:1px solid rgba(0,0,0,.16);background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#141414;font-family:inherit}",
+\t\t\t\t".dsw-ref:hover{background:rgba(0,0,0,.06)}",
+\t\t\t\t".dsw-foot{display:flex;align-items:center;padding:10px 18px 14px;border-top:1px solid rgba(0,0,0,.08)}",
+\t\t\t\t".dsw-hint{flex:1;font-size:12px;color:#8a8a8a}",
+\t\t\t\t".dsw-row{display:flex;align-items:center;gap:7.5px;width:100%;box-sizing:border-box;padding:7px 8px 7px 4.5px;margin:1px 0 1px -2px;background:transparent;border:none;border-left:2px solid transparent;border-radius:8px;cursor:pointer;color:var(--dsw-alias-label-primary,inherit);font-size:14px;text-align:left;font-family:inherit}",
+\t\t\t\t".dsw-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));border-left-color:var(--dsw-alias-state-business-primary,#3b82f6)}",
+\t\t\t\t".dsw-row-icon{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;flex:none}",
+\t\t\t\t// 侧栏收起成 56px 图标轨道时只留图标:用容器查询(不依赖上游 hash 过的类名)。
+\t\t\t\t".dsw-entries{container-type:inline-size}",
+\t\t\t\t"@container (max-width: 100px){.dsw-row-label{display:none}.dsw-row{justify-content:center;padding-left:0;padding-right:4px;margin-left:0}.dsw-row:hover{border-left-color:transparent}.dsw-row + .dsw-row{margin-top:3px}.dsw-row-icon svg[data-k=\\"plugins\\"]{width:16.6px;height:16.6px}.dsw-row-icon svg[data-k=\\"skills\\"]{width:20.7px;height:20.7px}}",
+\t\t\t\t".dsw-corner{display:flex;align-items:center;gap:8px}",
+\t\t\t\t".dsw-dot{width:7px;height:7px;border-radius:50%;background:#3fd68f;display:inline-block}",
+\t\t\t\t".dsw-status{font-size:12.5px;color:var(--dsw-alias-label-secondary,#666)}",
+\t\t\t\t".dsw-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f7cff,#7aa2ff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}"
+\t\t\t].join("");
+\t\t\tconst tag = document.createElement("style");
+\t\t\ttag.dataset.dshworkBrand = "true";
+\t\t\ttag.textContent = css;
+\t\t\tdocument.head.appendChild(tag);
+\t\t})();
+
+\t\t// ── DOM 层:替换 hero 文案 + 藏预览角标 ──
+\t\t// 注意:只藏「角标元素本身」,绝不藏父元素(父元素里还包着标题)。
+\t\t// 同时:若标题的某个祖先曾被旧版误藏(display:none),这里负责恢复。
+\t\tlet patching = false;
+\t\tfunction revealChain(el) {
+\t\t\tlet p = el;
+\t\t\twhile (p && p !== document.body && p.style) {
+\t\t\t\tif (p.style.display === "none") p.style.display = "";
+\t\t\t\tp = p.parentElement;
+\t\t\t}
+\t\t}
+\t\t// 把首页品牌区改成「竖排居中」:logo 在上、文字在下。
+\t\tfunction restructureHero(headlineEl) {
+\t\t\ttry {
+\t\t\t\tconst group = headlineEl.parentElement; // titleGroup(标题 + 角标)
+\t\t\t\tif (!group) return;
+\t\t\t\tconst row = group.parentElement; // 品牌行(logo + titleGroup)
+\t\t\t\tif (row && row !== document.body) {
+\t\t\t\t\trow.style.display = "flex";
+\t\t\t\t\trow.style.flexDirection = "column";
+\t\t\t\t\trow.style.alignItems = "center";
+\t\t\t\t\trow.style.justifyContent = "center";
+\t\t\t\t\trow.style.gap = "14px";
+\t\t\t\t}
+\t\t\t\tgroup.style.display = "flex";
+\t\t\t\tgroup.style.flexDirection = "column";
+\t\t\t\tgroup.style.alignItems = "center";
+\t\t\t\tgroup.style.gap = "8px";
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t}
+\t\t// 侧边栏左上角品牌 mark:官方 FishLogo(svg)→ 换成我们的 logo。
+\t\tfunction patchSidebarBrand() {
+\t\t\t// 判据是「我们的槽位**真的渲染出来了**」,而不是「注册成功」——
+\t\t\t// 注册成功不等于赢得渲染(遮蔽失败时注册照样成功)。只有当 DOM 里
+\t\t\t// 找不到槽位渲染的 mark 时,才由这里兜底,避免 logo 两边都不出现。
+\t\t\ttry {
+\t\t\t\tif (document.querySelector("img[data-dshwork-slot-mark]")) return;
+\t\t\t\tif (document.querySelector("img[data-dshwork-brand-mark]")) return;
+\t\t\t\t// 品牌名是矢量字(不是文本节点),所以按「位置」找:左上角那块 svg。
+\t\t\t\tconst svgs = document.querySelectorAll("svg");
+\t\t\t\tfor (const svg of svgs) {
+\t\t\t\t\tconst r = svg.getBoundingClientRect();
+\t\t\t\t\tif (r.width < 14 || r.width > 64 || r.height < 14 || r.height > 64) continue;
+\t\t\t\t\tif (r.left > 132 || r.top > 96) continue; // 必须在左上角
+\t\t\t\t\tconst s = Math.round(r.width) || 24;
+\t\t\t\t\tconst img = document.createElement("img");
+\t\t\t\t\timg.src = MARK;
+\t\t\t\t\timg.setAttribute("data-dshwork-brand-mark", "true");
+\t\t\t\t\timg.alt = "dshwork";
+\t\t\t\t\timg.width = s;
+\t\t\t\t\timg.height = s;
+\t\t\t\t\timg.style.objectFit = "contain";
+\t\t\t\t\timg.style.display = "block";
+\t\t\t\t\tsvg.replaceWith(img);
+\t\t\t\t\treturn;
+\t\t\t\t}
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t}
+\t\tfunction patchHero() {
+\t\t\tif (patching || typeof document === "undefined") return;
+\t\t\tpatching = true;
+\t\t\ttry {
+\t\t\t\tconst els = document.querySelectorAll("span,div,h1,p");
+\t\t\t\tfor (const el of els) {
+\t\t\t\t\tif (el.children.length !== 0) continue;
+\t\t\t\t\tconst txt = (el.textContent || "").trim();
+\t\t\t\t\tif (HERO_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\t\trevealChain(el);
+\t\t\t\t\t\tel.textContent = HERO_HEADLINE;
+\t\t\t\t\t\trestructureHero(el);
+\t\t\t\t\t} else if (txt === HERO_HEADLINE) {
+\t\t\t\t\t\trevealChain(el);
+\t\t\t\t\t\trestructureHero(el);
+\t\t\t\t\t} else if (PREVIEW_OLD.indexOf(txt) !== -1) {
+\t\t\t\t\t\tel.style.display = "none";
+\t\t\t\t\t}
+\t\t\t\t}
+\t\t\t\tpatchSidebarBrand();
+\t\t\t} finally {
+\t\t\t\tpatching = false;
+\t\t\t}
+\t\t}
+\t\tif (typeof window !== "undefined" && typeof document !== "undefined") {
+\t\t\tpatchHero();
+\t\t\tlet n = 0;
+\t\t\tconst timer = setInterval(() => { patchHero(); if (++n > 600 && timer) clearInterval(timer); }, 700);
+\t\t\ttry { new MutationObserver(() => patchHero()).observe(document.documentElement, { childList: true, subtree: true, characterData: true }); } catch (_) {}
+\t\t}
+
+\t\t// ── 内置内容(占位/示例) ──
+\t\tconst PLUGINS = [
+\t\t\t{ name: "工作区", desc: "项目与会话集中管理(harness 原生)" },
+\t\t\t{ name: "皮肤主题", desc: "界面皮肤:whale-girl(已启用)" },
+\t\t\t{ name: "桌面宠物", desc: "dsh-desktop-pet(已启用)" },
+\t\t\t{ name: "DSHwork 品牌", desc: "品牌 logo、首页文案与入口(本插件)" }
+\t\t];
+\t\tconst SKILLS = [
+\t\t\t{ name: "报告生成", desc: "把多来源信息整合成结构化报告 / 方案", cite: "请使用「报告生成」技能:" },
+\t\t\t{ name: "文献检索", desc: "多源检索、归纳要点与引用", cite: "请使用「文献检索」技能:" }
+\t\t];
+
+\t\t// ── 组件 ──
+\t\tfunction BrandMark({ size }) {
+\t\t\t// harness 给的 size(首页约 34)偏小,这里放大 ~1.8 倍,竖排居中时更醒目。
+\t\t\tconst s = Math.round((size || 34) * 1.8);
+\t\t\treturn React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", style: { objectFit: "contain", display: "block" } });
+\t\t}
+
+\t\t// 侧栏品牌 mark:官方槽位 sidebar.brand.mark(kind:"single")。
+\t\t// 正经占槽位,替掉原来的 DOM 硬改 —— React 重渲染冲不掉组件,侧栏折叠态
+\t\t// (railMark)那个渲染点也自动覆盖,而 DOM 兜底只能改到第一个命中的 svg。
+\t\tfunction SidebarBrandMark({ size }) {
+\t\t\tconst s = Math.round(size || 24);
+\t\t\treturn React.createElement("img", { src: MARK, width: s, height: s, alt: "dshwork", "data-dshwork-slot-mark": "true", style: { objectFit: "contain", display: "block" } });
+\t\t}
+
+\t\tfunction Icon({ kind }) {
+\t\t\tconst paths = {
+\t\t\t\tplugins: "M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z",
+\t\t\t\tskills: "M10 2l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4L5.5 15.8l.9-5L2.8 7.3l5-.7L10 2z"
+\t\t\t};
+\t\t\t// plugins 取自 Lucide 的 puzzle 图标(lucide-static v0.453.0, ISC 许可),24x24 原稿,坐标零换算。
+\t\t\tconst VIEW_BOXES = { plugins: "0 0 24 24" };
+\t\t\tconst STROKE_WIDTHS = { plugins: 2 };
+\t\t\t// 三个图标画布占满度不同(设置 93% / 插件 92% / 星星 79%),svg 尺寸一样则视觉大小不齐。
+\t\t\t// 按「视觉尺寸对齐上游设置(展开 14.95px、收起 16.33px)」反推各自 svg 尺寸。
+\t\t\tconst SIZES = { plugins: 15.2, skills: 18.9 };
+\t\t\tconst TRANSFORMS = { skills: "translate(0 1.1)" };
+\t\t\tconst svgSize = SIZES[kind] || 18;
+\t\t\treturn React.createElement("svg", {
+\t\t\t\tviewBox: VIEW_BOXES[kind] || "0 0 20 20",
+\t\t\t\twidth: svgSize, height: svgSize, "data-k": kind,
+\t\t\t\tfill: "none", stroke: "currentColor",
+\t\t\t\tstrokeWidth: STROKE_WIDTHS[kind] || 1.4,
+\t\t\t\tstrokeLinejoin: "round", strokeLinecap: "round"
+\t\t\t},
+\t\t\t\tReact.createElement("path", { d: paths[kind] || "", transform: TRANSFORMS[kind] }));
+\t\t}
+
+\t\tfunction EntryRow({ icon, label, onClick }) {
+\t\t\treturn React.createElement("button", { type: "button", className: "dsw-row", title: label, onClick: onClick },
+\t\t\t\tReact.createElement("span", { className: "dsw-row-icon" }, React.createElement(Icon, { kind: icon })),
+\t\t\t\tReact.createElement("span", { className: "dsw-row-label" }, label));
+\t\t}
+
+\t\t// 把技能引用插进输入框(真的写进 composer)。
+\t\tfunction insertToComposer(text) {
+\t\t\ttry {
+\t\t\t\tconst ta = document.querySelector("textarea");
+\t\t\t\tif (ta) {
+\t\t\t\t\tconst setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+\t\t\t\t\tconst next = (ta.value || "") + text;
+\t\t\t\t\tif (setter) setter.call(ta, next);
+\t\t\t\t\telse ta.value = next;
+\t\t\t\t\tta.dispatchEvent(new Event("input", { bubbles: true }));
+\t\t\t\t\tta.focus();
+\t\t\t\t\treturn true;
+\t\t\t\t}
+\t\t\t\tconst ce = document.querySelector('[contenteditable="true"]');
+\t\t\t\tif (ce) {
+\t\t\t\t\tce.textContent = (ce.textContent || "") + text;
+\t\t\t\t\tce.dispatchEvent(new Event("input", { bubbles: true }));
+\t\t\t\t\tce.focus();
+\t\t\t\t\treturn true;
+\t\t\t\t}
+\t\t\t} catch (_) {
+\t\t\t\t/* ignore */
+\t\t\t}
+\t\t\treturn false;
+\t\t}
+
+\t\tfunction Switch({ on, disabled, onToggle }) {
+\t\t\treturn React.createElement("button", {
+\t\t\t\ttype: "button",
+\t\t\t\tclassName: "dsw-switch" + (on ? " on" : "") + (disabled ? " disabled" : ""),
+\t\t\t\trole: "switch",
+\t\t\t\t"aria-checked": on ? "true" : "false",
+\t\t\t\tdisabled: !!disabled,
+\t\t\t\ttitle: disabled ? "内置插件,不可停用" : (on ? "已启用,点击停用" : "已停用,点击启用"),
+\t\t\t\tonClick: (e) => { e.stopPropagation(); if (!disabled) onToggle(!on); }
+\t\t\t}, React.createElement("span", { className: "dsw-knob" }));
+\t\t}
+
+\t\t// 技能面板
+\t\tfunction SkillsPanel({ onClose }) {
+\t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
+\t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
+\t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, "技能"),
+\t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\\u00d7")),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-body" },
+\t\t\t\t\t\tSKILLS.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
+\t\t\t\t\t\t\t\tReact.createElement("span", null, it.desc)),
+\t\t\t\t\t\t\tReact.createElement("button", {
+\t\t\t\t\t\t\t\ttype: "button",
+\t\t\t\t\t\t\t\tclassName: "dsw-ref",
+\t\t\t\t\t\t\t\ttitle: "把该技能插入输入框",
+\t\t\t\t\t\t\t\tonClick: () => { insertToComposer((it.cite || it.name) + " "); onClose(); }
+\t\t\t\t\t\t\t}, "引用")))),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, "点「引用」会把技能写进输入框。"))));
+\t\t}
+
+\t\t// 已安装:走 host 的真实接口
+\t\tfunction InstalledTab() {
+\t\t\tconst [items, setItems] = useState(null);
+\t\t\tconst [msg, setMsg] = useState("");
+\t\t\tconst load = () => {
+\t\t\t\tfetch("/dshwork/api/plugins", { headers: { accept: "application/json" } })
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => setItems(d && d.ok && Array.isArray(d.plugins) ? d.plugins : []))
+\t\t\t\t\t.catch(() => setItems([]));
+\t\t\t};
+\t\t\tReact.useEffect(load, []);
+\t\t\tfunction toggle(name, next) {
+\t\t\t\tsetMsg("");
+\t\t\t\tfetch("/dshwork/api/plugins", {
+\t\t\t\t\tmethod: "POST",
+\t\t\t\t\theaders: { "content-type": "application/json" },
+\t\t\t\t\tbody: JSON.stringify({ name: name, enabled: next })
+\t\t\t\t})
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => {
+\t\t\t\t\t\tif (d && d.ok) { setMsg("已保存:" + name + (next ? " 已启用" : " 已停用") + ",重启后生效"); load(); }
+\t\t\t\t\t\telse setMsg("失败:" + ((d && d.error) || "未知错误"));
+\t\t\t\t\t})
+\t\t\t\t\t.catch((e) => setMsg("失败:" + e.message));
+\t\t\t}
+\t\t\tconst body = items === null
+\t\t\t\t? React.createElement("div", { className: "dsw-hint" }, "读取中…")
+\t\t\t\t: items.length === 0
+\t\t\t\t\t? React.createElement("div", { className: "dsw-hint" }, "读取失败:host 接口未就绪(重启 harness 后可用)")
+\t\t\t\t\t: items.map((it) => {
+\t\t\t\t\t\tconst desc = it.pinned ? "内置,不可停用" : (it.enabled ? "已启用" : "已关闭,可打开");
+\t\t\t\t\t\treturn React.createElement("div", { className: "dsw-item", key: it.name },
+\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
+\t\t\t\t\t\t\t\tReact.createElement("span", null, desc)),
+\t\t\t\t\t\t\tReact.createElement(Switch, { on: it.enabled, disabled: it.pinned, onToggle: (v) => toggle(it.name, v) }));
+\t\t\t\t\t});
+\t\t\treturn React.createElement("div", null,
+\t\t\t\tReact.createElement("div", { className: "dsw-body" }, body),
+\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, msg || "开关直接改写 profile 的插件名单,重启 harness 后生效。")));
+\t\t}
+
+\t\t// 插件市场:从外部源拉取,可安装
+\t\tfunction MarketTab() {
+\t\t\tconst [state, setState] = useState({ status: "loading", items: [], source: "" });
+\t\t\tconst [msg, setMsg] = useState("");
+\t\t\tconst [installing, setInstalling] = useState("");
+\t\t\tconst load = () => {
+\t\t\t\tsetState({ status: "loading", items: [], source: "" });
+\t\t\t\tfetch("/dshwork/api/market", { headers: { accept: "application/json" } })
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => {
+\t\t\t\t\t\tif (d && d.ok) setState({ status: "ready", items: d.items || [], source: d.source || "" });
+\t\t\t\t\t\telse setState({ status: "error", items: [], source: (d && d.source) || "", error: (d && d.error) || "" });
+\t\t\t\t\t})
+\t\t\t\t\t.catch((e) => setState({ status: "error", items: [], source: "", error: e.message }));
+\t\t\t};
+\t\t\tReact.useEffect(load, []);
+\t\t\tfunction install(it) {
+\t\t\t\tsetMsg("");
+\t\t\t\tsetInstalling(it.name);
+\t\t\t\tfetch("/dshwork/api/market/install", {
+\t\t\t\t\tmethod: "POST",
+\t\t\t\t\theaders: { "content-type": "application/json" },
+\t\t\t\t\tbody: JSON.stringify({ name: it.name, version: it.version || undefined, downloadUrl: it.download || undefined })
+\t\t\t\t})
+\t\t\t\t\t.then((r) => r.json())
+\t\t\t\t\t.then((d) => {
+\t\t\t\t\t\tsetInstalling("");
+\t\t\t\t\t\tif (d && d.ok) setMsg("已安装:" + it.name + (d.mode === "archive" ? "(文件包)" : "") + ",重启 harness 后生效");
+\t\t\t\t\t\telse setMsg("安装失败:" + ((d && d.error) || "未知错误"));
+\t\t\t\t\t})
+\t\t\t\t\t.catch((e) => { setInstalling(""); setMsg("安装失败:" + e.message); });
+\t\t\t}
+\t\t\tconst body = state.status === "loading"
+\t\t\t\t? React.createElement("div", { className: "dsw-hint" }, "读取市场中…")
+\t\t\t\t: state.status === "error"
+\t\t\t\t\t? React.createElement("div", { className: "dsw-hint" }, "读取市场失败:" + (state.error || "未知错误") + "(源可稍后配置)")
+\t\t\t\t\t: state.items.length === 0
+\t\t\t\t\t\t? React.createElement("div", { className: "dsw-hint" }, "市场为空(源:" + state.source + ")")
+\t\t\t\t\t\t: state.items.map((it) => React.createElement("div", { className: "dsw-item", key: it.name },
+\t\t\t\t\t\t\tReact.createElement("div", { className: "dsw-item-main" },
+\t\t\t\t\t\t\t\tReact.createElement("b", null, it.name),
+\t\t\t\t\t\t\t\tReact.createElement("span", null, (it.description || "无描述") + (it.version ? " · v" + it.version : ""))),
+\t\t\t\t\t\t\tReact.createElement("button", {
+\t\t\t\t\t\t\t\ttype: "button",
+\t\t\t\t\t\t\t\tclassName: "dsw-ref",
+\t\t\t\t\t\t\t\tdisabled: installing === it.name,
+\t\t\t\t\t\t\t\tonClick: () => install(it)
+\t\t\t\t\t\t\t}, installing === it.name ? "安装中…" : (it.download ? "安装(文件包)" : "安装"))));
+\t\t\treturn React.createElement("div", null,
+\t\t\t\tReact.createElement("div", { className: "dsw-body" }, body),
+\t\t\t\tReact.createElement("div", { className: "dsw-foot" },
+\t\t\t\t\tReact.createElement("span", { className: "dsw-hint" }, msg || ("源:" + (state.source || "未配置")))));
+\t\t}
+
+\t\tfunction PluginsPanel({ onClose }) {
+\t\t\tconst [tab, setTab] = useState("installed");
+\t\t\tconst tabBtn = (id, label) => React.createElement("button", {
+\t\t\t\ttype: "button",
+\t\t\t\tclassName: "dsw-tab" + (tab === id ? " on" : ""),
+\t\t\t\tonClick: () => setTab(id)
+\t\t\t}, label);
+\t\t\treturn React.createElement("div", { className: "dsw-overlay", onClick: onClose },
+\t\t\t\tReact.createElement("div", { className: "dsw-panel", onClick: (e) => e.stopPropagation() },
+\t\t\t\t\tReact.createElement("div", { className: "dsw-top" },
+\t\t\t\t\t\tReact.createElement("span", { className: "dsw-brand" }, "插件"),
+\t\t\t\t\t\tReact.createElement("button", { type: "button", className: "dsw-close", onClick: onClose }, "\\u00d7")),
+\t\t\t\t\tReact.createElement("div", { className: "dsw-tabs" },
+\t\t\t\t\t\ttabBtn("installed", "已安装"),
+\t\t\t\t\t\ttabBtn("market", "插件市场")),
+\t\t\t\t\ttab === "installed" ? React.createElement(InstalledTab, null) : React.createElement(MarketTab, null)));
+\t\t}
+
+\t\tfunction Overlay() {
+\t\t\tconst page = useSyncExternalStore(store.subscribe, store.getSnapshot);
+\t\t\tif (!page) return null;
+\t\t\treturn page === "plugins"
+\t\t\t\t? React.createElement(PluginsPanel, { onClose: store.close })
+\t\t\t\t: React.createElement(SkillsPanel, { onClose: store.close });
+\t\t}
+
+\t\tfunction FooterAction() {
+\t\t\treturn React.createElement("div", { className: "dsw-entries", style: { display: "flex", flexDirection: "column", width: "100%", gap: "9px" } },
+\t\t\t\tReact.createElement(EntryRow, { icon: "plugins", label: "插件", onClick: () => store.openPage("plugins") }),
+\t\t\t\tReact.createElement(EntryRow, { icon: "skills", label: "技能", onClick: () => store.openPage("skills") }));
+\t\t}
+
+\t\tfunction Corner() {
+\t\t\treturn React.createElement("div", { className: "dsw-corner" },
+\t\t\t\tReact.createElement("span", { className: "dsw-status" }, React.createElement("span", { className: "dsw-dot" }), " 本地运行"),
+\t\t\t\tReact.createElement("span", { className: "dsw-avatar", title: "未登录(占位)" }, "U"));
+\t\t}
+
+\t\tconst inject = ["slots"];
+\t\t// 单占位槽(kind:"single")上「同优先级重复注册」会抛错,而且会让**整条 loader entry 失败**
+\t\t// —— 整个品牌插件一起挂掉。官方/第三方插件可能已经占着同一个槽,所以这里做两件事:
+\t\t//   1) 用一个更低的 priority 去「遮蔽」已有占位(lowest renders),而不是同优先级硬撞;
+\t\t//   2) 外面仍然包一层 try/catch —— 万一还撞上,只丢这一个占位,不让整个插件失效。
+\t\tconst SHADOW_PRIORITY = -1;
+\t\tfunction safeRegister(ctx, options, Component) {
+\t\t\ttry {
+\t\t\t\treturn ctx.slots.register(options, Component);
+\t\t\t} catch (err) {
+\t\t\t\ttry { console.warn("[dshwork-brand] slot register skipped:", options && options.name, err && err.message); } catch (_) { /* ignore */ }
+\t\t\t\treturn void 0;
+\t\t\t}
+\t\t}
+\t\tfunction apply(ctx) {
+\t\t\t// 侧栏品牌 mark:官方 dsh-client-ui-brand-official 在 priority 0 占着同一个
+\t\t\t// 槽(kind:"single"),我们以 -1 遮蔽它(lowest renders)即可 —— 不需要禁用
+\t\t\t// 官方那一行,因为品牌名 sidebar.brand.name 要保留官方字标原样不动。
+\t\t\tctx.slots.inject("sidebar.brand.mark", () => safeRegister(ctx, { name: "sidebar.brand.mark", priority: SHADOW_PRIORITY }, SidebarBrandMark));
+\t\t\t// 侧栏品牌名(sidebar.brand.name)刻意不占位:保留官方的 "deepseek HARNESS" 字标。
+\t\t\tctx.slots.inject("conversation.hero.brand.mark", () => safeRegister(ctx, { name: "conversation.hero.brand.mark", priority: SHADOW_PRIORITY }, BrandMark));
+\t\t\tctx.slots.inject("sidebar.footer.action", () => safeRegister(ctx, { name: "sidebar.footer.action", id: "dshwork-entries" }, FooterAction));
+\t\t\tctx.slots.inject("shell.overlay", () => safeRegister(ctx, { name: "shell.overlay", id: "dshwork-entries" }, Overlay));
+\t\t\tctx.slots.inject("conversation.session.header.corner", () => safeRegister(ctx, { name: "conversation.session.header.corner", id: "dshwork-corner" }, Corner));
+\t\t}
+
+\t\texports.BrandMark = BrandMark;
+\t\texports.FooterAction = FooterAction;
+\t\texports.Overlay = Overlay;
+\t\texports.Corner = Corner;
+\t\texports.apply = apply;
+\t\texports.inject = inject;
+\t\treturn module.exports;
+\t}
+});
+`;
+
+const out = path.join(__dirname, 'lib', 'client.js');
+const source = template.replace('__MARK__', JSON.stringify(MARK));
+// 生成的 bundle 在浏览器里是「一条 combo 脚本里的一段」:语法错误会让**整条 combo**
+// 报废,不是只挂掉本插件 —— harness 只会报第一个到达的 entry「loaded without registering」,
+// 真凶(这里的模板转义)完全不露面。所以先解析一遍,失败就不落盘。
+try {
+  new vm.Script(source, { filename: 'client.js' });
+} catch (err) {
+  console.error('生成的 bundle 无法解析,已放弃写入 lib/client.js:', err && err.message);
+  process.exit(1);
+}
+fs.mkdirSync(path.dirname(out), { recursive: true });
+fs.writeFileSync(out, source, 'utf8');
+console.log('已生成:', out, `(${fs.statSync(out).size} bytes)`);
